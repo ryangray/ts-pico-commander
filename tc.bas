@@ -25,7 +25,7 @@
    37 GO SUB 40
    38 RETURN 
    39 REM Status bar
-   40 PRINT AT 21,0; INK bg; PAPER ff;"                   TS-Pico Cmdr.";AT 21,0;
+   40 PRINT AT 21,0; INK bg; PAPER ff;"                   TS-Pico Cmdr ";CHR$ 8+"." AND n>19;AT 21,0;
    42 IF m THEN PRINT AT 21,1; INK bg; PAPER ff;a$(m,y(m) TO z(m));
    43 IF rd THEN INK bg: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
    48 RETURN 
@@ -37,7 +37,7 @@
    57 NEXT i
    58 RETURN 
    59 REM Load dirinfo.tap
-   60 CLS : LOAD "tpi:dirinfo.tap": PAUSE p: LET m=0
+   60 LOAD "tpi:dirinfo.tap": PAUSE p: LET m=0
    61 LOAD "" DATA a$(): CLS : PRINT p$''"Working";
    62 LET d=VAL a$(1): LET f=VAL a$(2)
    63 LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n)
@@ -63,10 +63,10 @@
    83 IF k=96 THEN GO TO 500: REM sym+X
    84 IF k=13 THEN GO TO 200
    85 IF k$="." THEN LET t$="..": GO TO 310
-   86 IF k$="/" THEN LET t$=k$: GO TO 310
+   86 IF k$="/" THEN LET t$="verbose": GO SUB 4500: GO TO 2008
    87 IF k$>="0" AND k$<="9" AND f>k-CODE "0" THEN GO SUB 150: LET s=d+3+k-CODE "0": GO TO 160
-   88 IF k=6 THEN LET t$="verbose": GO SUB 4500: GO TO 2008: REM sh+2
-   89 IF k=4 THEN GO TO 500: REM sh+3
+   88 IF k=6 THEN REM sh+2
+   89 IF k=4 THEN REM sh+3
    90 IF k=5 THEN REM sh+4
    91 IF k=12 THEN REM GO TO 1100: REM sh+0
    92 IF k=15 THEN REM sh+9
@@ -79,14 +79,14 @@
    99 IF k=199 THEN GO TO 4100: REM <=
   100 IF k$="+" THEN CLS : GO TO 4030
   101 IF k=172 THEN LET t$="getinfo": GO TO 4200: REM sym+I
-  102 IF k$="=" THEN LET t$="getlog": GO TO 4200: REM sym+L
+  102 IF k$="=" THEN LET t$="getlog": GO TO 4700: REM sym+L
   103 IF k$="%" THEN LET t$="close": LET m=0: GO SUB 4500: PRINT AT 0,0;: GO SUB 21: GO TO 80
-  104 IF k$="^" THEN LET t$="gethelp": GO TO 4600: REM sym+H
+  104 IF k$="^" THEN LET t$="gethelp": GO TO 4700: REM sym+H
   105 IF k$="-" THEN GO TO 200
   106 IF k$="!" THEN GO TO 700
   107 IF k=7 THEN GO SUB 150: LET s=2: GO TO 160: REM sh+1
   108 IF k=205 THEN GO TO 1200: REM STEP sym+D
-  109 IF k=226 THEN BEEP 0.1, 10*(m>0): IF m THEN LET t$="append": GO TO 4200: REM sym+A
+  109 IF k=226 THEN BEEP 0.1,10*(m>0): IF m THEN LET t$="append": GO TO 4200: REM sym+A
   120 IF k$>="!" AND k$<="z" THEN GO TO 170
   149 GO TO 80
   150 IF s<=d+2 THEN PRINT AT s-t+2,0; INK df; INVERSE h;"    ";a$(s, TO 28);: GO TO 154
@@ -115,13 +115,12 @@
   200 GO SUB 800: REM get real z(s)
   201 LET t$=a$(s,y(s) TO z(s)): REM File as displayed
   202 IF s<=d+2 THEN GO TO 300: REM dir
-  203 PRINT AT 21,31;OVER 1;" ";
   204 PRINT #0;"Mounting: ";t$
   206 GO SUB 1000: REM get ext
   208 LOAD "tpi:*"+a$(s, TO 3): PAUSE p
-  208 IF e$="" THEN LET m=s: GO TO 230: REM no ext
-  212 IF e$=".dck" OR e$=".DCK" THEN CLS: LOAD "": GO TO 1
-  214 IF e$=".tap" OR e$=".TAP" THEN CLS: LET m=s: GO TO 240
+  210 IF e$="" THEN LET m=s: GO TO 230: REM no ext
+  212 IF e$=".dck" OR e$=".DCK" THEN CLS : LOAD "": GO TO 1
+  214 IF e$=".tap" OR e$=".TAP" THEN CLS : LET m=s: GO TO 240
   230 INPUT "": GO TO 80
   240 IF k$="-" THEN GO TO 600
   250 GO TO 4030
@@ -141,14 +140,15 @@
   499 REM Switch running from AROS to BASIC
   500 REM Should use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system
   501 IF PEEK 23750=0 THEN BEEP 0.1,10L GO TO 80: REM Already in HOME bank
-  580 INK 0: PAPER 7: BORDER 7: CLS
+  580 INK 0: PAPER 7: BORDER 7: CLS 
   585 PRINT "Exiting DOCK bank to HOME bank."'"Use POKE 23750,128: RUN"'"to run TC again."
-  590 POKE 23750,0: STOP
+  590 POKE 23750,0: STOP 
   600 IF NOT m THEN BEEP 0.1,0: GO TO 2008
-  601 CLS
-  603 IF PEEK 23750=128 THEN PRINT "You need to LOAD """" manually": GO TO 585
-  604 LOAD ""
-  605 GO TO 4230
+  602 INK 0: PAPER 7: BORDER 7
+  603 CLS 
+  604 IF PEEK 23750=128 THEN PRINT "You need to LOAD """" manually": GO TO 585
+  606 LOAD ""
+  608 GO TO 4230
   610 IF NOT m THEN BEEP 0.1,0: GO TO 2008
   612 LOAD ""CODE 
   614 GO TO 4230
@@ -212,19 +212,16 @@
  3009 PRINT "0-9     Skip to file #000-009"
  3010 PRINT "a-z     Skip to file by letter"
  3011 PRINT "Enter   Mount file or change dir"
- 3012 PRINT "sym+K   tapdir"
  3013 PRINT "%       Close mounted file"
  3014 PRINT ". or /  cd .. or cd /"
- 3016 PRINT ":       Enter a tpi command"
- 3018 PRINT "!       Reset: close,cd /"
- 3020 PRINT "sym+J   LOAD """""
- 3022 PRINT "sym+I   getinfo"
- 3024 PRINT "sym+H   gethelp"
- 3026 PRINT "sym+L   getlog"
- 3030 PRINT "sym+D   md"
+ 3020 PRINT "sym+J   LOAD """"   sym+K  tapdir"
+ 3022 PRINT "sym+I   getinfo   sym+D  md"
+ 3024 PRINT "sym+H   gethelp   sym+A  append"
+ 3026 PRINT "sym+L   getlog    sym+V  verbose"
  3032 PRINT ">=      ffw & tapdir"
  3034 PRINT "<=      rew & tapdir"
- 3036 PRINT "sym+A   append"
+ 3036 PRINT ":       Enter a tpi command"
+ 3038 PRINT "!       Reset: close,cd /"
  3090 INPUT "Press enter:";t$
  3099 GO TO 2008
  4000 REM ffw
@@ -275,6 +272,12 @@
  4600 CLS 
  4610 SAVE "tpi:"+t$: PAUSE p
  4620 GO TO 4324
+ 4699 REM SAVE tpi, no reload, no prompt
+ 4700 CLS 
+ 4702 PRINT #0;"tpi:";t$
+ 4704 SAVE "tpi:"+t$: PAUSE p
+ 4706 INPUT ""
+ 4708 GO TO 2008
  9000 REM Init
  9001 LET p=60: LET t$=""
  9002 LET fg=7: LET bg=1: LET bd=bg
