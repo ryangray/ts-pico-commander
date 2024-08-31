@@ -56,11 +56,11 @@
    76 LET a$(1)=STR$ d+"."+STR$ f: REM save d&f in row 1 as d.f
    77 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0
    78 LET l$(2)=".": LET y(2)=1: LET z(2)=2: RETURN 
-   79 REM Main input
+   79 REM Main key input loop
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80
    81 IF (k$=" " OR k=10) AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160
    82 IF k=11 AND s>2 THEN GO SUB 150: LET s=s-1: GO TO 160
-   83 IF k=226 THEN STOP 
+   83 IF k=96 THEN GO TO 500: REM sym+X
    84 IF k=13 THEN GO TO 200
    85 IF k$="." THEN LET t$="..": GO TO 310
    86 IF k$="/" THEN LET t$=k$: GO TO 310
@@ -75,17 +75,18 @@
    95 IF k=8 AND s-19>=2 THEN GO SUB 150: LET s=s-19: GO TO 160
    96 IF k$="?" THEN GO TO 3000
    97 IF k$=":" THEN GO TO 400
-   98 IF k=200 THEN GO TO 4000
-   99 IF k=199 THEN GO TO 4100
+   98 IF k=200 THEN GO TO 4000: REM >=
+   99 IF k=199 THEN GO TO 4100: REM <=
   100 IF k$="+" THEN CLS : GO TO 4030
-  101 IF k=172 THEN LET t$="getinfo": GO TO 4200
-  102 IF k$="=" THEN LET t$="getlog": GO TO 4200
+  101 IF k=172 THEN LET t$="getinfo": GO TO 4200: REM sym+I
+  102 IF k$="=" THEN LET t$="getlog": GO TO 4200: REM sym+L
   103 IF k$="%" THEN LET t$="close": LET m=0: GO SUB 4500: PRINT AT 0,0;: GO SUB 21: GO TO 80
-  104 IF k$="^" THEN LET t$="gethelp": GO TO 4600
-  105 IF k$="-" THEN GO TO 600
+  104 IF k$="^" THEN LET t$="gethelp": GO TO 4600: REM sym+H
+  105 IF k$="-" THEN GO TO 200
   106 IF k$="!" THEN GO TO 700
-  107 IF k=7 THEN GO SUB 150: LET s=2: GO TO 160
+  107 IF k=7 THEN GO SUB 150: LET s=2: GO TO 160: REM sh+1
   108 IF k=205 THEN GO TO 1200: REM STEP sym+D
+  109 IF k=226 THEN BEEP 0.1, 10*(m>0): IF m THEN LET t$="append": GO TO 4200: REM sym+A
   120 IF k$>="!" AND k$<="z" THEN GO TO 170
   149 GO TO 80
   150 IF s<=d+2 THEN PRINT AT s-t+2,0; INK df; INVERSE h;"    ";a$(s, TO 28);: GO TO 154
@@ -112,15 +113,18 @@
   179 GO TO 160
   199 REM Enter pressed on item
   200 GO SUB 800: REM get real z(s)
-  201 LET t$=a$(s,y(s) TO z(s))
+  201 LET t$=a$(s,y(s) TO z(s)): REM File as displayed
   202 IF s<=d+2 THEN GO TO 300: REM dir
+  203 PRINT AT 21,31;OVER 1;" ";
   204 PRINT #0;"Mounting: ";t$
   206 GO SUB 1000: REM get ext
-  208 IF e$="" THEN LOAD "tpi:*"+a$(s, TO 3): LET m=s: GO TO 290: REM no ext
-  212 IF e$=".dck" OR e$=".DCK" THEN LOAD "tpi:"+t$: PAUSE p: CLS : LOAD "": GO TO 1
-  214 IF e$=".tap" OR e$=".TAP" THEN LOAD "tpi:"+t$: PAUSE p: LET m=s: CLS : GO TO 4030
-  280 LOAD "tpi:"+t$: PAUSE p
-  290 INPUT "": GO TO 80
+  208 LOAD "tpi:*"+a$(s, TO 3): PAUSE p
+  208 IF e$="" THEN LET m=s: GO TO 230: REM no ext
+  212 IF e$=".dck" OR e$=".DCK" THEN CLS: LOAD "": GO TO 1
+  214 IF e$=".tap" OR e$=".TAP" THEN CLS: LET m=s: GO TO 240
+  230 INPUT "": GO TO 80
+  240 IF k$="-" THEN GO TO 600
+  250 GO TO 4030
   299 REM cd
   300 LET t$=a$(s,y(s) TO z(s))
   302 LET q=s
@@ -134,15 +138,14 @@
   430 IF t$="dir" OR t$="path" OR t$="tapdir" THEN GO TO 4400
   432 IF LEN t$>=3 AND t$( TO 3)="cd " THEN LET m=0
   440 GO TO 4300
-  498 GO TO 2000
   499 REM Switch running from AROS to BASIC
   500 REM Should use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system
   501 IF PEEK 23750=0 THEN BEEP 0.1,10L GO TO 80: REM Already in HOME bank
-  580 INK 0: PAPER 7: BORDER 7: CLS 
+  580 INK 0: PAPER 7: BORDER 7: CLS
   585 PRINT "Exiting DOCK bank to HOME bank."'"Use POKE 23750,128: RUN"'"to run TC again."
-  590 POKE 23750,0: STOP 
+  590 POKE 23750,0: STOP
   600 IF NOT m THEN BEEP 0.1,0: GO TO 2008
-  601 CLS 
+  601 CLS
   603 IF PEEK 23750=128 THEN PRINT "You need to LOAD """" manually": GO TO 585
   604 LOAD ""
   605 GO TO 4230
@@ -201,7 +204,7 @@
  2010 GO TO 80
  3000 REM help
  3002 CLS 
- 3004 PRINT "TS-Pico Commander Help"'"----------------------"
+ 3004 PRINT INVERSE 1;"TS-Pico Commander Help"
  3005 PRINT "UP/DN   Highight name"
  3006 PRINT "<-/->   Page up/down"
  3007 PRINT "Space   Move down"
@@ -214,15 +217,14 @@
  3014 PRINT ". or /  cd .. or cd /"
  3016 PRINT ":       Enter a tpi command"
  3018 PRINT "!       Reset: close,cd /"
- 3019 REM PRINT "?       This help"
  3020 PRINT "sym+J   LOAD """""
  3022 PRINT "sym+I   getinfo"
  3024 PRINT "sym+H   gethelp"
  3026 PRINT "sym+L   getlog"
- 3028 REM PRINT "DEL     rm <selection>"
  3030 PRINT "sym+D   md"
  3032 PRINT ">=      ffw & tapdir"
  3034 PRINT "<=      rew & tapdir"
+ 3036 PRINT "sym+A   append"
  3090 INPUT "Press enter:";t$
  3099 GO TO 2008
  4000 REM ffw
