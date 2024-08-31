@@ -6,9 +6,7 @@
     6 REM Could make shift 1 and 2 move up down and leave letters to type in
     7 REM a virtual input line at #0. Shift 7 is CD .. 
     8 REM Shift 5/8 are pgup/dn, shift+0 is rm, shift+9 is md, sym+D is tapdir
-    9 GO SUB 9000
-   10 GO SUB 60
-   11 GO SUB 50
+   10 GO SUB 9000
    12 GO TO 2000
    19 REM Show listing
    20 CLS : PRINT p$;
@@ -52,14 +50,40 @@
    74 NEXT i
    78 RETURN 
  1999 REM Main input
- 2000 GO SUB 20
- 2010 INPUT "tpi:";c$
- 2012 IF c$="" THEN STOP 
- 2020 SAVE "tpi:cd "+c$: PAUSE p
- 2030 GO SUB 60
- 2040 GO SUB 50
- 2050 GO TO 2000
- 2099 STOP 
+ 2000 GO SUB 60
+ 2002 GO SUB 50
+ 2008 GO SUB 20
+ 2010 INPUT "tpi:";t$
+ 2012 IF t$="" THEN STOP 
+ 2014 IF t$="?" THEN GO TO 2070
+ 2016 IF t$(1)="*" THEN GO TO 2052
+ 2018 IF t$="=" THEN LET t$="tapdir"
+ 2020 IF t$="+" THEN LET t$="ffw"
+ 2022 IF t$="-" THEN LET t$="rew"
+ 2024 IF t$="." THEN LET t$="path"
+ 2026 IF t$=".." THEN LET t$="cd .."
+ 2028 IF t$="dir" THEN GO TO 2004
+ 2030 IF t$="tapdir" THEN GO TO 2058
+ 2034 IF t$="ffw" THEN SAVE "tpi:ffw": GO TO 2056
+ 2036 IF t$="rew" THEN SAVE "tpi:rew": GO TO 2056
+ 2038 IF LEN t$>3 THEN IF t$( TO 3)="cd " THEN GO TO 2046
+ 2040 IF LEN t$>4 THEN IF t$(LEN t$-3 TO )=".tap" OR t$(LEN t$-3 TO )=".TAP" THEN GO TO 2052
+ 2042 SAVE "tpi:"+t$
+ 2044 GO TO 2008
+ 2046 SAVE "tpi:"+t$: PAUSE p
+ 2048 SAVE "tpi:cd ."
+ 2050 GO TO 2004
+ 2052 REM Mount a .tap file
+ 2054 LOAD "tpi:"+t$
+ 2056 PAUSE p
+ 2058 CLS : LOAD "tpi:tapdir"
+ 2060 PAUSE p
+ 2062 INPUT "tpi:";t$
+ 2064 IF t$=" " THEN LOAD ""
+ 2066 IF t$="  " THEN MERGE "": STOP 
+ 2068 GO TO 2012
+ 2070 REM Helper help
+ 2072 GO TO 2008
  9000 REM Init
  9001 LET p=60
  9002 LET fg=7: LET bg=1: LET bd=bg
