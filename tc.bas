@@ -1,5 +1,11 @@
     1 REM Read TS-Pico directory
     2 REM from its dirinfo.tap
+    3 REM TODO: Integrate parts of ../helper/v1c/tpi.bas 
+    4 REM TODO: Add cursor selection of file/dir
+    5 REM Make keys select names, and space to bring up input prompt
+    6 REM Could make shift 1 and 2 move up down and leave letters to type in
+    7 REM a virtual input line at #0. Shift 7 is CD .. 
+    8 REM Shift 5/8 are pgup/dn, shift+0 is rm, shift+9 is md, sym+D is tapdir
     9 GO SUB 9000
    10 GO SUB 60
    11 GO SUB 50
