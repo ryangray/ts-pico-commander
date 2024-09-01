@@ -14,12 +14,11 @@
    22 PRINT '; INK bg; PAPER ff;" #  FILE NAME              SIZE "
    23 IF rd THEN INK bg: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
    24 LET r=18: IF r+t>n THEN LET r=n-t
-   25 FOR i=0 TO r
-   26 LET x=i+t: LET h=(x=s)
-   27 IF x<=d+2 THEN PRINT INK df; INVERSE h;"    ";a$(x, TO 28);: GO TO 35
-   34 PRINT INVERSE h; FLASH (x=m);a$(x, TO 4); FLASH 0; INK ff;a$(x,5 TO 22); INK fg;a$(x,23 TO );
-   35 NEXT i
-   36 LET h=0
+   25 FOR i=t TO r+t
+   27 PRINT b$(i)
+   29 NEXT i
+   30 IF s>=t AND s<=t+19 THEN PRINT AT s-t+2,0; INVERSE 1;b$(s)
+   35 IF m>=t AND m<=t+19 THEN PRINT AT m-t+2,0; INVERSE s=m; FLASH 1;a$(m, TO 4)
    37 GO SUB 40
    38 RETURN 
    39 REM Status bar
@@ -39,22 +38,22 @@
    60 LOAD "tpi:dirinfo.tap": PAUSE p: LET m=0
    61 LOAD "" DATA a$(): CLS : PRINT p$''"Working";
    62 LET d=VAL a$(1): LET f=VAL a$(2)
-   63 LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n)
+   63 LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36)
    64 IF d=0 THEN GO TO 70
-   65 FOR i=1+2 TO d+2: LET y(i)=1
-   66 PRINT ".";
+   65 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
+   66 LET b$(i)=d$+"    "+a$(i, TO 28)+g$
    67 LET z(i)=32: LET l$(i)=a$(i,1)
    68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
    69 NEXT i
    70 IF f=0 THEN GO TO 75
-   71 FOR i=d+3 TO n: LET y(i)=5: PRINT ".";
-   72 LET z(i)=22: LET l$(i)=a$(i,5)
-   73 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
+   71 FOR i=d+3 TO n: LET y(i)=5: LET z(i)=22: LET l$(i)=a$(i,5): PRINT ".";
+   72 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
+   73 LET b$(i)=a$(i, TO 4)+f$+a$(i,5 TO 22)+g$+a$(i,23 TO )
    74 NEXT i
-   75 REM Add ".." dir at a$(2)
-   76 LET a$(1)=STR$ d+"."+STR$ f: REM save d&f in row 1 as d.f
-   77 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0
-   78 LET l$(2)=".": LET y(2)=1: LET z(2)=2: RETURN 
+   75 LET b$(2)=h$
+   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0
+   77 LET l$(2)=".": LET y(2)=1: LET z(2)=2
+   78 RETURN 
    79 REM Main key input loop
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80
    81 IF (k$=" " OR k=10) AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160
@@ -283,6 +282,8 @@
  9003 LET ff=5: LET df=6: LET rd=1
  9004 LET s=-1: LET t=2: LET m=0
  9005 LET p$="": LET q=0: LET h=0
+ 9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
+ 9007 LET h$=d$+"    ..                          "+g$
  9009 REM Reset ATTR
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
