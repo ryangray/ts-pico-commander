@@ -8,7 +8,7 @@
    12 GO SUB 50
    14 GO SUB 60
    16 GO SUB 20
-   17 PRINT AT 21,1; INK bg; PAPER ff;;"? for help";
+   17 PRINT AT 21,1; INK bg; PAPER ff;"? for help";
    18 GO TO 80
    19 REM Show listing
    20 CLS 
@@ -25,7 +25,8 @@
    37 GO SUB 40
    38 RETURN 
    39 REM Status bar
-   40 PRINT AT 21,0; INK bg; PAPER ff;"                   TS-Pico Cmdr ";CHR$ 8+"." AND n>19;AT 21,0;
+   40 PRINT AT 21,0; INK bg; PAPER ff;"                   TS-Pico Cmdr ";
+   41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
    42 IF m THEN PRINT AT 21,1; INK bg; PAPER ff;a$(m,y(m) TO z(m));
    43 IF rd THEN INK bg: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
    48 RETURN 
@@ -283,7 +284,7 @@
  9002 LET fg=7: LET bg=1: LET bd=bg
  9003 LET ff=5: LET df=6: LET rd=1
  9004 LET s=-1: LET t=2: LET m=0
- 9005 LET p$="": LET q=0
+ 9005 LET p$="": LET q=0: LET h=0
  9009 REM Reset ATTR
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
