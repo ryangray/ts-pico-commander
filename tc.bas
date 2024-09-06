@@ -1,7 +1,7 @@
-    1 REM TS-Pico Commander v0.7
+    1 REM TS-Pico Commander v0.8
     2 REM 31 Aug 2024
     3 REM By Ryan Gray
-    4 REM
+    4 REM 
    10 GO SUB 9000
    12 GO SUB 50
    14 GO SUB 60
@@ -22,7 +22,7 @@
    37 GO SUB 40
    38 RETURN 
    39 REM Status bar
-   40 PRINT AT 21,0; INK bg; PAPER ff;"                   TS-Pico Cmdr ";
+   40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
    41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
    42 IF m THEN PRINT AT 21,1; INK bg; PAPER ff;a$(m,y(m) TO z(m));
    43 IF rd THEN INK bg: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
@@ -113,15 +113,27 @@
   200 GO SUB 800: REM get real z(s)
   201 LET t$=a$(s,y(s) TO z(s)): REM File as displayed
   202 IF s<=d+2 THEN GO TO 300: REM dir
+  203 LET m=s
   204 PRINT #0;"Mounting: ";t$
-  206 GO SUB 1000: REM get ext
-  208 LOAD "tpi:*"+a$(s, TO 3): PAUSE p
-  210 IF e$="" THEN LET m=s: GO TO 230: REM no ext
-  212 IF e$=".dck" OR e$=".DCK" THEN CLS : LOAD "": GO TO 1
-  214 IF e$=".tap" OR e$=".TAP" THEN CLS : LET m=s: GO TO 240
-  230 INPUT "": GO TO 80
+  205 GO SUB 1000: REM get ext
+  206 IF e$="" OR LEN t$-LEN e$>10 THEN LOAD "tpi:*"+a$(s, TO 3): PAUSE 120: GO TO 210: REM Load by *num
+  208 LOAD "tpi:"+t$: PAUSE p
+  210 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 240
+  212 IF e$="" THEN GO TO 230: REM no ext, mount only
+  214 IF e$=".dck" OR e$=".DCK" THEN GO TO 250
+  216 IF e$=".rom" OR e$=".ROM" THEN GO TO 250
+  218 IF e$=".bin" OR e$=".BIN" THEN GO TO 250
+  230 REM Other type, just mount only
+  232 INPUT "": GO TO 2008
   240 IF k$="-" THEN GO TO 600
-  250 GO TO 4030
+  245 GO TO 4030
+  250 REM DCK ROM BIN loading
+  252 IF k$="-" THEN GO TO 600
+  254 PRINT #0;"Load (y/N):";
+  260 LET k$=INKEY$: IF k$="" THEN GO TO 260
+  262 PRINT #0;k$
+  270 IF k$="y" OR k$="Y" THEN GO TO 600
+  280 GO TO 2008
   299 REM cd
   300 LET t$=a$(s,y(s) TO z(s))
   302 LET q=s
@@ -174,12 +186,12 @@
   928 IF j>31 THEN GO TO 930
   929 GO TO 922
   930 RETURN 
- 1000 REM 
+ 1000 REM Get .ext
+ 1001 LET e$=""
  1002 FOR i=z(s) TO y(s) STEP -1
- 1004 IF a$(s,i)="." THEN GO TO 1008
+ 1004 IF a$(s,i)="." THEN LET e$=a$(s,i TO z(s)): RETURN
  1006 NEXT i
- 1008 IF a$(s,i)="." THEN LET e$=a$(s,i TO z(s)): RETURN 
- 1009 LET e$="": RETURN 
+ 1009 RETURN 
  1099 REM Delete
  1100 GO SUB 800
  1102 LET t$=a$(s,y(s) TO z(s))
