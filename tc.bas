@@ -1,5 +1,5 @@
-    1 REM TS-Pico Commander v0.8
-    2 REM 31 Aug 2024
+    1 REM TS-Pico Commander v0.9
+    2 REM 21 Oct 2024
     3 REM By Ryan Gray
     4 REM 
    10 GO SUB 9000
@@ -9,10 +9,10 @@
    17 PRINT AT 21,1; INK bg; PAPER ff;"? for help";
    18 GO TO 80
    19 REM Show listing
-   20 CLS 
-   21 PRINT p$;
+   20 INK fg: PAPER bg: BORDER bd: CLS 
+   21 PRINT PAPER bd;p$;
    22 PRINT '; INK bg; PAPER ff;" #  FILE NAME              SIZE "
-   23 IF rd THEN INK bg: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
+   23 IF rd THEN INK bd: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
    24 LET r=18: IF r+t>n THEN LET r=n-t
    25 FOR i=t TO r+t
    27 PRINT b$(i)
@@ -25,7 +25,7 @@
    40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
    41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
    42 IF m THEN PRINT AT 21,1; INK bg; PAPER ff;a$(m,y(m) TO z(m));
-   43 IF rd THEN INK bg: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
+   43 IF rd THEN INK bd: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
    48 RETURN 
    49 REM Get path
    50 CLS : DIM p$(32)
@@ -34,8 +34,7 @@
    56 LET p$(i+1)=SCREEN$ (2,i)
    57 NEXT i
    58 RETURN 
-   59 REM Load dirinfo.tap
-   60 LOAD "tpi:dirinfo.tap": PAUSE p: LET m=0
+   60 LOAD "tpi:dirinfo.tap": PAUSE 120: LET m=0
    61 LOAD "" DATA a$(): CLS : PRINT p$''"Working";
    62 LET d=VAL a$(1): LET f=VAL a$(2)
    63 LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36)
@@ -56,8 +55,8 @@
    78 RETURN 
    79 REM Main key input loop
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80
-   81 IF (k$=" " OR k=10) AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160
-   82 IF k=11 AND s>2 THEN GO SUB 150: LET s=s-1: GO TO 160
+   81 IF (k$=" " OR k=10) AND s<n THEN LET h=0: GO SUB 150: LET s=s+1: GO TO 160
+   82 IF k=11 AND s>2 THEN LET h=0: GO SUB 150: LET s=s-1: GO TO 160
    83 IF k=96 THEN GO TO 500: REM sym+X
    84 IF k=13 THEN GO TO 200
    85 IF k$="." THEN LET t$="..": GO TO 310
@@ -101,7 +100,7 @@
   168 GO TO 2008
   169 REM Skip to letter
   170 LET t$=l$(s)
-  171 LET i=0: GO SUB 150
+  171 LET i=0: LET h=0: GO SUB 150
   172 IF k$>="a" AND k$<="z" THEN LET k$=CHR$ (CODE k$-32)
   173 IF k$=t$ THEN IF s<n THEN IF l$(s+1)=k$ THEN LET s=s+1: GO SUB 150: GO TO 160
   174 IF k$=t$ AND s=n THEN GO TO 80
@@ -109,33 +108,56 @@
   176 LET t$=l$(s)
   178 IF k$<>t$ AND i=0 THEN GO TO 175
   179 GO TO 160
+  180 REM Get len of a$(s)
+  182 FOR j=z(s) TO y(s) STEP -1: IF a$(s,j)<>" " THEN LET z(s)=j: RETURN 
+  184 NEXT j
+  190 LET sz=VAL a$(s,23 TO 30)
+  193 IF a$(s,31)="K" THEN LET sz=sz*1024
+  194 LET sz=sz/1024/16
+  196 IF sz<1 THEN LET sz=1
+  198 RETURN 
   199 REM Enter pressed on item
-  200 GO SUB 800: REM get real z(s)
-  201 LET t$=a$(s,y(s) TO z(s)): REM File as displayed
+  200 IF m=s THEN GO TO 236
+  201 LET h=0: GO SUB 150: LET h=1: GO SUB 150: GO SUB 180: LET t$=a$(s,y(s) TO z(s)): REM File as displayed
   202 IF s<=d+2 THEN GO TO 300: REM dir
   203 LET m=s
-  204 PRINT #0;"Mounting: ";t$
-  205 GO SUB 1000: REM get ext
-  206 IF e$="" OR LEN t$-LEN e$>10 THEN LOAD "tpi:*"+a$(s, TO 3): PAUSE 120: GO TO 210: REM Load by *num
-  208 LOAD "tpi:"+t$: PAUSE p
-  210 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 240
-  212 IF e$="" THEN GO TO 230: REM no ext, mount only
-  214 IF e$=".dck" OR e$=".DCK" THEN GO TO 250
-  216 IF e$=".rom" OR e$=".ROM" THEN GO TO 250
-  218 IF e$=".bin" OR e$=".BIN" THEN GO TO 250
-  230 REM Other type, just mount only
-  232 INPUT "": GO TO 2008
-  240 IF k$="-" THEN GO TO 600
-  245 GO TO 4030
-  250 REM DCK ROM BIN loading
-  252 IF k$="-" THEN GO TO 600
-  254 PRINT #0;"Load (y/N):";
-  260 LET k$=INKEY$: IF k$="" THEN GO TO 260
-  262 PRINT #0;k$
-  270 IF k$="y" OR k$="Y" THEN GO TO 600
-  280 GO TO 2008
+  204 REM Get .ext
+  206 LET e$="": LET l=LEN t$
+  208 FOR i=l TO 1 STEP -1
+  210 IF t$(i)="." THEN LET e$=t$(i TO l): LET n$=t$( TO i-1): GO TO 216
+  212 NEXT i
+  214 LET n$=t$
+  216 IF e$="" THEN INPUT "What is the extension? ";e$: GO TO 226
+  218 IF l-i>=3 THEN GO TO 230
+  220 INPUT "Found extension of """;VAL$ "e$";""","'"correct (y/n)?";k$
+  222 IF k$="y" OR k$="Y" THEN GO TO 230
+  224 INPUT "What is the extension? ";e$
+  226 IF e$="" THEN GO TO 230
+  228 IF e$(1)<>"." THEN LET e$="."+e$
+  229 LET t$=n$+e$
+  230 PRINT #0;"Mounting: ";t$
+  231 ON ERR GO TO 1000
+  232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as """;w$;a$(s, TO 3);""")": LOAD "tpi:"+w$+a$(s, TO 3): PAUSE p*2*sz: GO TO 235
+  234 LOAD "tpi:"+t$: PAUSE p*sz
+  235 ON ERR \*: IF oe THEN ON ERR GO TO 9100
+  236 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
+  238 IF e$="" THEN GO TO 248: REM no ext, mount only
+  240 IF e$=".dck" OR e$=".DCK" THEN GO TO 260
+  242 IF e$=".rom" OR e$=".ROM" THEN GO TO 260
+  244 IF e$=".bin" OR e$=".BIN" THEN GO TO 260
+  246 REM Other type, just mount only
+  248 INPUT "": GO TO 2008
+  250 IF k$="-" THEN GO TO 600
+  252 GO TO 4030
+  260 REM DCK ROM BIN loading
+  262 IF k$="-" THEN GO TO 600
+  264 PRINT #0;"Load (y/N):";
+  270 LET k$=INKEY$: IF k$="" THEN GO TO 270
+  272 PRINT #0;k$
+  280 IF k$="y" OR k$="Y" THEN GO TO 600
+  290 GO TO 2008
   299 REM cd
-  300 LET t$=a$(s,y(s) TO z(s))
+  300 REM LET t$=a$(s,y(s) TO z(s))
   302 LET q=s
   310 PRINT #0;"tpi:cd ";t$
   320 SAVE "tpi:cd "+t$: PAUSE p
@@ -149,29 +171,41 @@
   440 GO TO 4300
   499 REM Switch running from AROS to BASIC
   500 REM Should use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system
-  501 IF PEEK 23750=0 THEN BEEP 0.1,10L GO TO 80: REM Already in HOME bank
-  580 INK 0: PAPER 7: BORDER 7: CLS 
-  585 PRINT "Exiting DOCK bank to HOME bank."'"Use POKE 23750,128: RUN"'"to run TC again."
+  510 INK 0: PAPER 7: BORDER 7: CLS 
+  512 IF oe THEN ON ERR \*
+  520 IF NOT dock THEN STOP : REM Already in HOME bank
+  530 PRINT "Exiting DOCK bank to HOME bank."
+  532 PRINT "Use NEW to run TC again, or use"
+  534 PRINT " POKE 23750,128: RUN"
+  536 PRINT "to preserve the BASIC program."
+  538 PRINT "If you switch DOCK banks, use"
+  540 PRINT " SAVE ""tpi:memdock""CODE m,n"
+  542 PRINT "first, where m,n is the bank"
+  544 PRINT "that TC was loaded into."
   590 POKE 23750,0: STOP 
   600 IF NOT m THEN BEEP 0.1,0: GO TO 2008
-  602 INK 0: PAPER 7: BORDER 7
-  603 CLS 
-  604 IF PEEK 23750=128 THEN PRINT "You need to LOAD """" manually": GO TO 585
-  606 LOAD ""
-  608 GO TO 4230
-  610 IF NOT m THEN BEEP 0.1,0: GO TO 2008
-  612 LOAD ""CODE 
-  614 GO TO 4230
+  601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR \*
+  602 IF dock THEN GO TO 604
+  603 LOAD "": STOP 
+  604 IF e$=".dck" OR e$=".DCK" THEN GO TO 607
+  605 PRINT "Use NEW to run TC again."
+  606 POKE 23750,0: LOAD "": STOP 
+  607 PRINT "Exiting DOCK bank to HOME bank."
+  608 PRINT '"To run ";a$(s,y(s) TO z(s));","'"you need to do LOAD """" manually"'"after the system restarts."'': INPUT "Restart (Y/n)? ";k$
+  609 IF k$="n" OR k$="N" THEN GO TO 2008
+  610 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: NEW 
+  620 IF NOT m THEN BEEP 0.1,0: GO TO 2008
+  622 LOAD ""CODE 
+  624 GO TO 4230
+  630 MERGE ""
+  632 INPUT "Exit to BASIC? (y/N):";k$
+  634 IF k$="y" OR k$="Y" THEN GO TO 500
+  636 GO TO 4230
   699 REM Reset
   700 SAVE "tpi:close": PAUSE p
   710 SAVE "tpi:cd /": PAUSE p
   712 LET m=0
   720 GO TO 2000
-  799 REM Get len of a$(s)
-  800 REM z(s) should be rightmost starting point; 32 for dirs and 22 for files, set in sub 60
-  810 FOR j=z(s) TO y(s) STEP -1: IF a$(s,j)<>" " THEN LET z(s)=j: GO TO 830
-  820 NEXT j
-  830 RETURN 
   899 REM Sniff tapdir listing
   900 LET i=5
   910 IF SCREEN$ (i,0)=">" THEN GO TO 920
@@ -186,14 +220,13 @@
   928 IF j>31 THEN GO TO 930
   929 GO TO 922
   930 RETURN 
- 1000 REM Get .ext
- 1001 LET e$=""
- 1002 FOR i=z(s) TO y(s) STEP -1
- 1004 IF a$(s,i)="." THEN LET e$=a$(s,i TO z(s)): RETURN
- 1006 NEXT i
- 1009 RETURN 
+ 1000 PAUSE p
+ 1002 IF PEEK 23739<>19 THEN GO TO 9100
+ 1010 LET w$="&"
+ 1020 ON ERR GO TO 9100
+ 1030 GO TO 232
  1099 REM Delete
- 1100 GO SUB 800
+ 1100 GO SUB 180
  1102 LET t$=a$(s,y(s) TO z(s))
  1104 IF s<3 OR s>d+2 THEN BEEP 0.1,0: GO TO 80
  1106 INPUT "Remove "+t$+" (y/N)?";k$
@@ -215,10 +248,10 @@
  3000 REM help
  3002 CLS 
  3004 PRINT INVERSE 1;"TS-Pico Commander Help"
- 3005 PRINT "UP/DN   Highight name"
- 3006 PRINT "<-/->   Page up/down"
- 3007 PRINT "Space   Move down"
- 3008 PRINT "EDIT    Move to top"
+ 3005 PRINT "Up/Down Move selection"
+ 3006 PRINT "Space   Move down"
+ 3007 PRINT "<-/->   Page up/down"
+ 3008 PRINT "EDIT    Move to first file"
  3009 PRINT "0-9     Skip to file #000-009"
  3010 PRINT "a-z     Skip to file by letter"
  3011 PRINT "Enter   Mount file or change dir"
@@ -232,6 +265,7 @@
  3034 PRINT "<=      rew & tapdir"
  3036 PRINT ":       Enter a tpi command"
  3038 PRINT "!       Reset: close,cd /"
+ 3039 PRINT "sym+X   Quit program"
  3090 INPUT "Press enter:";t$
  3099 GO TO 2008
  4000 REM ffw
@@ -240,13 +274,16 @@
  4020 SAVE "tpi:ffw": PAUSE p
  4030 LOAD "tpi:tapdir": REM PAUSE p
  4040 GO SUB 900
- 4050 PRINT #0;"Any key, "; INVERSE 1;"L"; INVERSE 0;"oad, "; INVERSE 1;"C"; INVERSE 0;"ode, "; INVERSE 1;"<="; INVERSE 0;" or "; INVERSE 1;">=";
+ 4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad, "; INVERSE 1;"C"; INVERSE 0;"ode, ";
+# 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge, ";
+ 4054 PRINT #0; INVERSE 1;"<="; INVERSE 0;" or "; INVERSE 1;">=";
  4060 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 4060
  4061 INPUT ""
  4062 IF k=200 THEN GO TO 4012
  4064 IF k=199 THEN GO TO 4100
  4066 IF k$="l" THEN GO TO 600
- 4068 IF k$="c" THEN GO TO 610
+ 4068 IF k$="c" THEN GO TO 620
+# 4070 IF k$="m" AND dock THEN GO TO 600
  4098 GO TO 2008
  4100 IF NOT m THEN GO TO 80
  4110 CLS 
@@ -289,32 +326,127 @@
  4706 INPUT ""
  4708 GO TO 2008
  9000 REM Init
- 9001 LET p=60: LET t$=""
+ 9001 LET p=60: LET t$="": LET sz=1
  9002 LET fg=7: LET bg=1: LET bd=bg
  9003 LET ff=5: LET df=6: LET rd=1
  9004 LET s=-1: LET t=2: LET m=0
  9005 LET p$="": LET q=0: LET h=0
  9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
  9007 LET h$=d$+"    ..                          "+g$
- 9009 REM Reset ATTR
+ 9008 LET w$="*": REM Load by index char
+ 9009 LET oe=1: REM =1 for ON ERR handling
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
  9012 INVERSE 0: CLS 
- 9019 REM Turn off tpi:verbose
- 9020 SAVE "tpi:verbose"
- 9030 IF SCREEN$ (1,0)="V" THEN SAVE "tpi:verbose"
- 9040 INK fg: CLS 
+ 9019 REM Set error handling
+ 9020 IF oe THEN ON ERR GO TO 9100
+ 9029 REM Turn off tpi:verbose
+ 9030 SAVE "tpi:verbose"
+ 9040 IF SCREEN$ (1,0)="V" THEN SAVE "tpi:verbose"
+ 9050 INK fg: CLS 
+ 9060 LET nxt=PEEK 23637+256*PEEK 23638
+ 9062 LET nxtlin=256*PEEK nxt+PEEK (nxt+1)
+ 9064 LET dock=nxtlin<>9062
  9099 RETURN 
- 9100 REM Variables
- 9108 REM a$(n,32)=dirinfo
- 9110 REM d=num if dirs in a$
- 9112 REM f=num if files in a$
- 9114 REM n=d+f+2 = rows of a$
- 9116 REM z(i)=end of a$(i),i>2
- 9118 REM y(i)=start of a$(i)
- 9120 REM p$(32)=path
- 9122 REM s=selected file
- 9124 REM m=mounted file num
- 9126 REM k$=INKEY$
- 9128 REM t$=tpi cmd or a file
- 9199 RETURN 
+ 9100 LET err=PEEK 23739
+ 9102 LET lin=PEEK 23736
+ 9104 LET stm=PEEK 23738
+ 9106 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ 9107 INK fg: PAPER bg: BORDER bd: CLS 
+ 9108 PRINT "Error ";c$(err+1);"(";err;") ";lin;":";stm
+ 9110 IF err=13 OR err=21 THEN GO TO 9400
+ 9112 IF err=19 THEN GO TO 9200
+ 9116 IF err=27 THEN GO TO 9300
+ 9140 ON ERR CONTINUE 
+ 9150 STOP 
+ 9200 PRINT "TS-Pico error. Checking..."
+ 9210 ON ERR GO TO 9250
+ 9212 FOR a=1 TO 16
+ 9214 LET i=IN 14
+ 9216 OUT 14,100
+ 9218 NEXT a
+ 9220 SAVE "tpi:close"
+ 9230 PRINT "Temoprary error recovered."
+ 9232 INPUT "Press Enter:";k$
+ 9240 ON ERR GO TO 100
+ 9242 GO TO 2000
+ 9250 PRINT "TS-Pico not responding, sorry."
+ 9260 ON ERR \*
+ 9270 STOP 
+ 9310 PRINT "Tape loading error. Checking..."
+ 9320 ON ERR GO TO 9250
+ 9330 SAVE "tpi:close"
+ 9340 GO TO 9230
+ 9400 ON ERR \*
+ 9410 INPUT "BREAK: (S)top or (C)ontinue?";k$
+ 9420 IF k$="s" OR k$="S" THEN STOP 
+ 9430 ON ERR GO TO 9250
+ 9440 SAVE "tpi:close"
+ 9450 ON ERR GO TO 9100
+ 9460 GO TO 2000
+
+# Variables
+# a$(n,32)=dirinfo
+# b$(n,36) same but with two sets of color control codes added
+# d=num if dirs in a$
+# f=num if files in a$
+# n=d+f+2 = rows of a$
+# z(i)=end of a$(i),i>2
+# y(i)=start of a$(i)
+# l$(n) holds the uppercase first letter of each file name
+# p$(32)=path
+# s=selected file
+# m=mounted file num
+# k$=INKEY$ k=CODE k$
+# t$=tpi cmd or a file
+# h=1 if line drawn is for selected file
+# t=row in a$ and b$ of top line of listing on screen
+# fg,gb = main foreground, background colors
+# bd = border color
+# ff = file foreground color
+# df = directory foreground color
+# rd = 
+# d$ = df color codes
+# f$ = ff color codes
+# g$ = fg color codes
+# h$ = constant ".." dir entry to set in b$(2)
+# e$ = file extension
+# oe = ON ERR error handling enabled
+#
+# 9199 REM Load machine code
+# 9200 LET rt=PEEK 23730+256*PEEK 23731
+# 9202 RETURN
+#
+# 9300 RESTORE
+# 9302 LET ok=1: READ nb
+# 9304 FOR a=1 TO nb
+# 9306 READ x: IF PEEK (rt+a)<>x THEN LET ok=0: RETURN
+# 9308 NEXT a
+# 9310 RETURN
+#
+# 9400 CLEAR rt-nb
+# 9402 GO SUB 9200
+# 9404 RESTORE
+# 9406 READ nb
+# 9408 FOR a=1 TO nb
+# 9410 READ x: POKE rt+a, x
+# 9412 NEXT a
+# 9414 RETURN
+#
+# 9500 DATA 0
+#
+# Steps for a dck file:
+#
+# SAVE "tpi:foo.dck": Mount dock file
+# LOAD "" - Invoke dckupdate.tap which does the following:
+#   Prompt for location 1 for SRAM, 2 for Flash
+#   Prompt for slot sl=0:2:14
+# SAVE "tpi:memdock"CODE loc,sl : Select location for Dock bank to be mapped to
+# Patch MC to skip flash erase if loc=1
+# SAVE "tpi:blkrcv" : ? Does this transfer now or queue data for transfer later?
+# RANDOMIZE USR 32800 : Flash erasing LOWER 32Kb block
+# RANDOMIZE USR 32600 : Flash erasing UPPER 32Kb block
+# RANDOMIZE USR 32870 : Writing LOWER 32Kb block
+# RANDOMIZE USR 32670 : Writing UPPER 32Kb block
+# NEW : With the right data in mapped DOCK bank, the code will be run on restart
+
