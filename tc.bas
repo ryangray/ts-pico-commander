@@ -1,5 +1,5 @@
     1 REM TS-Pico Commander v0.9
-    2 REM 21 Oct 2024
+    2 REM 28 Oct 2024
     3 REM By Ryan Gray
     4 REM 
    10 GO SUB 9000
@@ -17,9 +17,9 @@
    25 FOR i=t TO r+t
    27 PRINT b$(i)
    29 NEXT i
-   30 IF s>=t AND s<=t+19 THEN PRINT AT s-t+2,0; INVERSE 1;b$(s)
-   35 IF m>=t AND m<=t+19 THEN PRINT AT m-t+2,0; INVERSE s=m; FLASH 1;a$(m, TO 4)
-   37 GO SUB 40
+   30 LET h=1: GO SUB 150
+   32 LET h=0
+   34 GO SUB 40
    38 RETURN 
    39 REM Status bar
    40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
@@ -55,8 +55,8 @@
    78 RETURN 
    79 REM Main key input loop
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80
-   81 IF (k$=" " OR k=10) AND s<n THEN LET h=0: GO SUB 150: LET s=s+1: GO TO 160
-   82 IF k=11 AND s>2 THEN LET h=0: GO SUB 150: LET s=s-1: GO TO 160
+   81 IF (k$=" " OR k=10) AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160
+   82 IF k=11 AND s>2 THEN GO SUB 150: LET s=s-1: GO TO 160
    83 IF k=96 THEN GO TO 500: REM sym+X
    84 IF k=13 THEN GO TO 200
    85 IF k$="." THEN LET t$="..": GO TO 310
@@ -129,17 +129,20 @@
   214 LET n$=t$
   216 IF e$="" THEN INPUT "What is the extension? ";e$: GO TO 226
   218 IF l-i>=3 THEN GO TO 230
-  220 INPUT "Found extension of """;VAL$ "e$";""","'"correct (y/n)?";k$
-  222 IF k$="y" OR k$="Y" THEN GO TO 230
-  224 INPUT "What is the extension? ";e$
+  220 PRINT #0;"Found extension of """;VAL$ "e$";""","'"correct (y/n)? ";
+  221 LET k$=INKEY$: IF k$="" THEN GO TO 221
+  222 IF k$="y" OR k$="Y" THEN PRINT #0;k$: GO TO 230
+  223 IF k$="n" OR k$="N" THEN PRINT #0;k$: GO TO 225
+  224 GO TO 221
+  225 INPUT "What is the extension? ";e$
   226 IF e$="" THEN GO TO 230
   228 IF e$(1)<>"." THEN LET e$="."+e$
   229 LET t$=n$+e$
   230 PRINT #0;"Mounting: ";t$
-  231 ON ERR GO TO 1000
+  231 IF NOT w THEN ON ERR GO TO 1000
   232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as """;w$;a$(s, TO 3);""")": LOAD "tpi:"+w$+a$(s, TO 3): PAUSE p*2*sz: GO TO 235
   234 LOAD "tpi:"+t$: PAUSE p*sz
-  235 ON ERR \*: IF oe THEN ON ERR GO TO 9100
+  235 ON ERR \*: IF oe THEN ON ERR GO TO oe
   236 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
   238 IF e$="" THEN GO TO 248: REM no ext, mount only
   240 IF e$=".dck" OR e$=".DCK" THEN GO TO 260
@@ -151,13 +154,12 @@
   252 GO TO 4030
   260 REM DCK ROM BIN loading
   262 IF k$="-" THEN GO TO 600
-  264 PRINT #0;"Load (y/N):";
+  264 PRINT #0;"Load (y/n)? ";
   270 LET k$=INKEY$: IF k$="" THEN GO TO 270
-  272 PRINT #0;k$
-  280 IF k$="y" OR k$="Y" THEN GO TO 600
-  290 GO TO 2008
-  299 REM cd
-  300 REM LET t$=a$(s,y(s) TO z(s))
+  280 IF k$="y" OR k$="Y" THEN PRINT #0;k$: GO TO 600
+  282 IF k$="n" OR k$="N" THEN PRINT #0;k$: GO TO 2008
+  290 GO TO 270
+  300 REM cd
   302 LET q=s
   310 PRINT #0;"tpi:cd ";t$
   320 SAVE "tpi:cd "+t$: PAUSE p
@@ -221,9 +223,9 @@
   929 GO TO 922
   930 RETURN 
  1000 PAUSE p
- 1002 IF PEEK 23739<>19 THEN GO TO 9100
- 1010 LET w$="&"
- 1020 ON ERR GO TO 9100
+ 1002 IF PEEK 23739<>19 THEN GO TO oe
+ 1010 LET w$="&": LET w=1
+ 1020 IF oe THEN ON ERR GO TO oe
  1030 GO TO 232
  1099 REM Delete
  1100 GO SUB 180
@@ -333,13 +335,14 @@
  9005 LET p$="": LET q=0: LET h=0
  9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
  9007 LET h$=d$+"    ..                          "+g$
- 9008 LET w$="*": REM Load by index char
- 9009 LET oe=1: REM =1 for ON ERR handling
+ 9008 LET w=0: LET w$="*": REM Load by index char
+ 9009 LET oe=9100: REM >0 for ON ERR handling
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
  9012 INVERSE 0: CLS 
+ 9013 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
  9019 REM Set error handling
- 9020 IF oe THEN ON ERR GO TO 9100
+ 9020 IF oe THEN ON ERR GO TO oe
  9029 REM Turn off tpi:verbose
  9030 SAVE "tpi:verbose"
  9040 IF SCREEN$ (1,0)="V" THEN SAVE "tpi:verbose"
@@ -351,7 +354,6 @@
  9100 LET err=PEEK 23739
  9102 LET lin=PEEK 23736
  9104 LET stm=PEEK 23738
- 9106 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
  9107 INK fg: PAPER bg: BORDER bd: CLS 
  9108 PRINT "Error ";c$(err+1);"(";err;") ";lin;":";stm
  9110 IF err=13 OR err=21 THEN GO TO 9400
@@ -382,9 +384,8 @@
  9420 IF k$="s" OR k$="S" THEN STOP 
  9430 ON ERR GO TO 9250
  9440 SAVE "tpi:close"
- 9450 ON ERR GO TO 9100
+ 9450 ON ERR GO TO oe
  9460 GO TO 2000
-
 # Variables
 # a$(n,32)=dirinfo
 # b$(n,36) same but with two sets of color control codes added
