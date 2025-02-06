@@ -1,7 +1,9 @@
-    1 REM TS-Pico Commander v0.9
-    2 REM 28 Oct 2024
+    1 REM TS-Pico Commander v0.91
+    2 REM 30 Oct 2024
     3 REM By Ryan Gray
     4 REM 
+    8 GO TO 10
+    9 LET f=256*(256*PEEK 23674+PEEK 23673)+PEEK 23672: RETURN
    10 GO SUB 9000
    12 GO SUB 50
    14 GO SUB 60
@@ -29,19 +31,19 @@
    48 RETURN 
    49 REM Get path
    50 CLS : DIM p$(32)
-   52 LOAD "tpi:path"
+   52 LET u=1: LET u$="tpi:path": GO SUB 750
    54 FOR i=0 TO 31
    56 LET p$(i+1)=SCREEN$ (2,i)
    57 NEXT i
    58 RETURN 
-   60 LOAD "tpi:dirinfo.tap": PAUSE 120: LET m=0
-   61 LOAD "" DATA a$(): CLS : PRINT p$''"Working";
-   62 LET d=VAL a$(1): LET f=VAL a$(2)
-   63 LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36)
-   64 IF d=0 THEN GO TO 70
-   65 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
-   66 LET b$(i)=d$+"    "+a$(i, TO 28)+g$
-   67 LET z(i)=32: LET l$(i)=a$(i,1)
+   60 LET u=1: LET u$="tpi:dirinfo.tap": GO SUB 750
+   61 LET m=0
+   62 LET u=1: GO SUB 760: REM LOAD "" DATA a$()
+   63 CLS : PRINT p$''"Working";
+   64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36)
+   65 IF d=0 THEN GO TO 70
+   66 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
+   67 LET b$(i)=d$+"    "+a$(i, TO 28)+g$: LET z(i)=32: LET l$(i)=a$(i,1)
    68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
    69 NEXT i
    70 IF f=0 THEN GO TO 75
@@ -80,7 +82,7 @@
   103 IF k$="%" THEN LET t$="close": LET m=0: GO SUB 4500: PRINT AT 0,0;: GO SUB 21: GO TO 80
   104 IF k$="^" THEN LET t$="gethelp": GO TO 4700: REM sym+H
   105 IF k$="-" THEN GO TO 200
-  106 IF k$="!" THEN GO TO 700
+  106 IF k$="!" THEN GO TO 650
   107 IF k=7 THEN GO SUB 150: LET s=2: GO TO 160: REM sh+1
   108 IF k=205 THEN GO TO 1200: REM STEP sym+D
   109 IF k=226 THEN BEEP 0.1,10*(m>0): IF m THEN LET t$="append": GO TO 4200: REM sym+A
@@ -117,7 +119,7 @@
   196 IF sz<1 THEN LET sz=1
   198 RETURN 
   199 REM Enter pressed on item
-  200 IF m=s THEN GO TO 236
+  200 IF m=s THEN GO TO 237
   201 LET h=0: GO SUB 150: LET h=1: GO SUB 150: GO SUB 180: LET t$=a$(s,y(s) TO z(s)): REM File as displayed
   202 IF s<=d+2 THEN GO TO 300: REM dir
   203 LET m=s
@@ -140,10 +142,11 @@
   229 LET t$=n$+e$
   230 PRINT #0;"Mounting: ";t$
   231 IF NOT w THEN ON ERR GO TO 1000
-  232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as """;w$;a$(s, TO 3);""")": LOAD "tpi:"+w$+a$(s, TO 3): PAUSE p*2*sz: GO TO 235
-  234 LOAD "tpi:"+t$: PAUSE p*sz
-  235 ON ERR \*: IF oe THEN ON ERR GO TO oe
-  236 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
+  232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as """;w$;a$(s, TO 3);""")": LET u=2: LET u$="tpi:"+w$+a$(s, TO 3): GO SUB 750: GO TO 235
+  234 LET u=2: LET u$="tpi:"+t$: GO SUB 750: IF NOT u AND NOT w THEN GO TO 1000
+  235 IF NOT u THEN GO SUB 450: GO TO 2008
+  236 ON ERR \*: IF oe THEN ON ERR GO TO oe
+  237 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
   238 IF e$="" THEN GO TO 248: REM no ext, mount only
   240 IF e$=".dck" OR e$=".DCK" THEN GO TO 260
   242 IF e$=".rom" OR e$=".ROM" THEN GO TO 260
@@ -161,8 +164,10 @@
   290 GO TO 270
   300 REM cd
   302 LET q=s
-  310 PRINT #0;"tpi:cd ";t$
-  320 SAVE "tpi:cd "+t$: PAUSE p
+  310 LET u=2: LET u$="tpi:cd "+t$
+  311 PRINT #0;u$
+  320 GO SUB 700
+  321 IF NOT u THEN GO SUB 450
   322 LET m=0
   330 INPUT "": GO TO 2000
   400 REM tpi command
@@ -171,6 +176,8 @@
   430 IF t$="dir" OR t$="path" OR t$="tapdir" THEN GO TO 4400
   432 IF LEN t$>=3 AND t$( TO 3)="cd " THEN LET m=0
   440 GO TO 4300
+  450 INPUT "Not found: ";t$;". Press Enter:";k$
+  454 RETURN 
   499 REM Switch running from AROS to BASIC
   500 REM Should use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system
   510 INK 0: PAPER 7: BORDER 7: CLS 
@@ -203,11 +210,48 @@
   632 INPUT "Exit to BASIC? (y/N):";k$
   634 IF k$="y" OR k$="Y" THEN GO TO 500
   636 GO TO 4230
-  699 REM Reset
-  700 SAVE "tpi:close": PAUSE p
-  710 SAVE "tpi:cd /": PAUSE p
-  712 LET m=0
-  720 GO TO 2000
+  649 REM Reset
+  650 LET u=1: LET u$="tpi:close": GO SUB 700
+  660 LET u=2: LET u$="tpi:cd /": GO SUB 700
+  670 LET m=0
+  680 GO TO 2000
+  699 REM SAVE and LOAD tpi cmd subs
+  700 GO SUB 9: LET f0=f
+  720 SAVE u$
+  730 RETURN 
+  750 GO SUB 9: LET f0=f
+  754 LOAD u$
+  755 IF NOT u THEN PRINT INVERSE 1;"u$=";u$
+  756 RETURN 
+  759 REM Load dirinfo data
+  760 GO SUB 9: LET f0=f
+  762 LET u=1
+  764 LOAD "" DATA a$()
+  766 RETURN 
+  799 REM Error handler
+  800 LET err=PEEK 23739
+  802 LET lin=PEEK 23736+256*PEEK 23737
+  804 LET stm=PEEK 23738
+  806 GO SUB 9: LET i=f-f0
+  810 IF i>=300 THEN GO TO 830: REM Timeout
+  812 IF err=13 OR err=21 THEN GO TO 850: REM Break
+  814 IF err<>19 THEN GO TO 834: REM Not error J
+  816 IF u=2 THEN GO TO 840: REM tpi type - 2=cd/mount,1=other
+  818 LET u=0: REM Reset after 1st error
+  820 PAUSE 20: REM Wait a bit before retry
+  822 GO TO lin: REM Retry command
+  830 IF err<>19 THEN GO TO 834: REM Other err timeout
+  832 PRINT INVERSE 1;"TS-Pico not responding."
+  834 ON ERR \*
+  836 PRINT INVERSE 1;"Error ";c$(err+1);" ";lin;":";stm
+  839 STOP 
+  840 REM Mount or cd immediate fail
+  842 RETURN 
+  850 ON ERR \*
+  852 INPUT "BREAK: (S)top or (C)ontinue?";k$
+  854 IF k$="s" OR k$="S" THEN STOP 
+  856 ON ERR GO TO oe
+  858 GO TO 2000
   899 REM Sniff tapdir listing
   900 LET i=5
   910 IF SCREEN$ (i,0)=">" THEN GO TO 920
@@ -222,7 +266,8 @@
   928 IF j>31 THEN GO TO 930
   929 GO TO 922
   930 RETURN 
- 1000 PAUSE p
+  999 REM One-time err handler for load"tpi:*nnn"
+ 1000 REM Can't use *, so use &
  1002 IF PEEK 23739<>19 THEN GO TO oe
  1010 LET w$="&": LET w=1
  1020 IF oe THEN ON ERR GO TO oe
@@ -273,8 +318,8 @@
  4000 REM ffw
  4010 IF NOT m THEN GO TO 80
  4012 CLS 
- 4020 SAVE "tpi:ffw": PAUSE p
- 4030 LOAD "tpi:tapdir": REM PAUSE p
+ 4020 LET u=1: LET u$="tpi:ffw": GO SUB 700
+ 4030 LET u=1: LET u$="tpi:tapdir": GO SUB 750
  4040 GO SUB 900
  4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad, "; INVERSE 1;"C"; INVERSE 0;"ode, ";
 # 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge, ";
@@ -289,42 +334,47 @@
  4098 GO TO 2008
  4100 IF NOT m THEN GO TO 80
  4110 CLS 
- 4120 SAVE "tpi:rew": PAUSE p
+ 4120 LET u=1: LET u$="tpi:rew": GO SUB 700
  4130 GO TO 4030
  4200 REM SAVE tpi cmd, no reload
  4210 CLS 
- 4212 PRINT #0;"tpi:";t$
- 4220 SAVE "tpi:"+t$: PAUSE p
+ 4212 LET u$="tpi:"+t$
+ 4214 PRINT #0;u$
+ 4220 LET u=1: GO SUB 700
  4230 INPUT ""
  4232 PRINT #0;"Press a key..."
  4234 PAUSE 0: INPUT ""
  4236 GO TO 2008
  4300 REM SAVE tpi cmd, reload
  4310 CLS 
- 4312 PRINT #0;"tpi:";t$
- 4320 SAVE "tpi:"+t$: PAUSE p
+ 4312 LET u$="tpi:"+t$
+ 4314 PRINT #0;u$
+ 4320 LET u=1: GO SUB 700
  4322 INPUT ""
  4324 PRINT #0;"Press a key..."
  4326 PAUSE 0: INPUT ""
  4330 GO TO 2000
  4400 REM LOAD tpi cmd, reload
  4410 CLS 
- 4412 PRINT #0;"tpi:";t$
- 4420 LOAD "tpi:"+t$: PAUSE p
+ 4412 LET u$="tpi:"+t$
+ 4414 PRINT #0;u$
+ 4420 LET u=1: GO SUB 750
  4430 GO TO 4322
  4500 REM SAVE tpi, no reload, no CLS or prompt or redraw
- 4510 PRINT #0;"tpi:";t$
- 4520 SAVE "tpi:"+t$: PAUSE p
+ 4510 LET u$="tpi:"+t$
+ 4512 PRINT #0;"tpi:";t$
+ 4520 LET u=1: GO SUB 700
  4530 INPUT ""
  4540 RETURN 
  4599 REM SAVE tpi, no reload, no echo, no prompt
  4600 CLS 
- 4610 SAVE "tpi:"+t$: PAUSE p
+ 4610 LET u=1: LET u$="tpi:"+t$: GO SUB 700
  4620 GO TO 4324
  4699 REM SAVE tpi, no reload, no prompt
  4700 CLS 
- 4702 PRINT #0;"tpi:";t$
- 4704 SAVE "tpi:"+t$: PAUSE p
+ 4701 LET u$="tpi:"+t$
+ 4702 PRINT #0;u$
+ 4704 LET u=1: GO SUB 700
  4706 INPUT ""
  4708 GO TO 2008
  9000 REM Init
@@ -336,7 +386,7 @@
  9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
  9007 LET h$=d$+"    ..                          "+g$
  9008 LET w=0: LET w$="*": REM Load by index char
- 9009 LET oe=9100: REM >0 for ON ERR handling
+ 9009 LET oe=800: REM =0 for no ON ERR handling, else err routine line num
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
  9012 INVERSE 0: CLS 
@@ -344,48 +394,13 @@
  9019 REM Set error handling
  9020 IF oe THEN ON ERR GO TO oe
  9029 REM Turn off tpi:verbose
- 9030 SAVE "tpi:verbose"
- 9040 IF SCREEN$ (1,0)="V" THEN SAVE "tpi:verbose"
+ 9030 LET u=1: LET u$="tpi:verbose": GO SUB 700
+ 9040 IF SCREEN$ (1,0)="V" THEN LET u=1: GO SUB 700
  9050 INK fg: CLS 
  9060 LET nxt=PEEK 23637+256*PEEK 23638
  9062 LET nxtlin=256*PEEK nxt+PEEK (nxt+1)
  9064 LET dock=nxtlin<>9062
  9099 RETURN 
- 9100 LET err=PEEK 23739
- 9102 LET lin=PEEK 23736
- 9104 LET stm=PEEK 23738
- 9107 INK fg: PAPER bg: BORDER bd: CLS 
- 9108 PRINT "Error ";c$(err+1);"(";err;") ";lin;":";stm
- 9110 IF err=13 OR err=21 THEN GO TO 9400
- 9112 IF err=19 THEN GO TO 9200
- 9116 IF err=27 THEN GO TO 9300
- 9140 ON ERR CONTINUE 
- 9150 STOP 
- 9200 PRINT "TS-Pico error. Checking..."
- 9210 ON ERR GO TO 9250
- 9212 FOR a=1 TO 16
- 9214 LET i=IN 14
- 9216 OUT 14,100
- 9218 NEXT a
- 9220 SAVE "tpi:close"
- 9230 PRINT "Temoprary error recovered."
- 9232 INPUT "Press Enter:";k$
- 9240 ON ERR GO TO 100
- 9242 GO TO 2000
- 9250 PRINT "TS-Pico not responding, sorry."
- 9260 ON ERR \*
- 9270 STOP 
- 9310 PRINT "Tape loading error. Checking..."
- 9320 ON ERR GO TO 9250
- 9330 SAVE "tpi:close"
- 9340 GO TO 9230
- 9400 ON ERR \*
- 9410 INPUT "BREAK: (S)top or (C)ontinue?";k$
- 9420 IF k$="s" OR k$="S" THEN STOP 
- 9430 ON ERR GO TO 9250
- 9440 SAVE "tpi:close"
- 9450 ON ERR GO TO oe
- 9460 GO TO 2000
 # Variables
 # a$(n,32)=dirinfo
 # b$(n,36) same but with two sets of color control codes added
