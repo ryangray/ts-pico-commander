@@ -1,5 +1,5 @@
-    1 REM TS-Pico Commander v0.92
-    2 REM 4 Nov 2024
+    1 REM TS-Pico Commander v0.93
+    2 REM 18 Dec 2024
     3 REM By Ryan Gray
     4 REM 
     8 GO TO 10
@@ -249,6 +249,23 @@
   784 LOAD "" DATA a$()
   786 RETURN 
   799 REM Main ON ERR handler
+# Caller sets u$ to tpi command, including "tpi:".
+# Caller then uses GO SUB 770 to sync with idle pico.
+# Caller then uses GO SUB 700 or 710 to issue u$ as a SAVE command.
+# If the call returns, the command suceeded. If an immediate error occurred, 
+# then the routine will stop the program after printing the error.
+# If you want to handle an immediate error (file does not exist when mounting 
+# for example), call GO SUB 710 and check if u<0 on return.
+# When call returns, if u>0 then command suceeded immediately. If it is 0, then
+# the command had to wait but suceeded. If u<0 then the command failed 
+# immediately, meaning the command was bad, the file or directory was not found,
+# but the pico is still responding. 
+# For example:
+#   GO SUB 770: REM Wait for idle
+#   LET u$="tpi:cd "+d$
+#   GO SUB 700: REM SAVE tpi
+#   IF u<0 THEN PRINT "Directory ";d$;" not found"
+# For a LOAD tpi command, call GO SUB 750 or 760
   800 LET err=PEEK 23739
   802 LET lin=PEEK 23736+256*PEEK 23737
   804 LET stm=PEEK 23738
@@ -343,19 +360,24 @@
  4040 GO SUB 900
  4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad, "; INVERSE 1;"C"; INVERSE 0;"ode, ";
 # 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge, ";
- 4054 PRINT #0; INVERSE 1;"<="; INVERSE 0;" or "; INVERSE 1;">=";
+ 4054 PRINT #0; INVERSE 1;"A"; INVERSE 0;"ppend, ";
+ 4056 PRINT #0; INVERSE 1;"<="; INVERSE 0;" or "; INVERSE 1;">=";
  4060 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 4060
  4061 INPUT ""
- 4062 IF k=200 THEN GO TO 4012
+ 4062 IF k=200 THEN GO TO 4000
  4064 IF k=199 THEN GO TO 4100
  4066 IF k$="l" THEN GO TO 600
  4068 IF k$="c" THEN GO TO 620
+ 4070 IF k$="a" THEN GO TO 4150
 # 4070 IF k$="m" AND dock THEN GO TO 600
  4098 GO TO 2008
  4100 IF NOT m THEN GO TO 80
  4110 CLS 
  4120 GO SUB 770: LET u$="tpi:rew": GO SUB 700
  4130 GO TO 4030
+ 4150 GO SUB 770
+ 4152 LET u$="tpi:append": GO SUB 700
+ 4154 GO TO 4030
  4200 REM SAVE tpi cmd, no reload
  4210 CLS 
  4212 LET u$="tpi:"+t$
