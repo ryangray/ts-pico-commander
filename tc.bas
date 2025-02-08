@@ -1,15 +1,23 @@
-    1 REM TS-Pico Commander v0.93
-    2 REM 18 Dec 2024
+    1 REM TS-Pico Commander v0.94
+    2 REM 8 Feb 2025
     3 REM By Ryan Gray
     4 REM 
     8 GO TO 10
+# Get FRAMES clock sub
     9 LET f=256*(256*PEEK 23674+PEEK 23673)+PEEK 23672: RETURN
+# Init
    10 GO SUB 9000
+# Get the current path
    12 GO SUB 50
+# Load directory info
    14 GO SUB 60
+# Draw the file screen
    16 GO SUB 20
+# Print key for help on first run
    17 PRINT AT 21,1; INK bg; PAPER ff;"? for help";
+# Jump to key loop
    18 GO TO 80
+# Draw current file screen sub
    19 REM Show listing
    20 INK fg: PAPER bg: BORDER bd: CLS 
    21 PRINT PAPER bd;p$;
@@ -21,14 +29,13 @@
    29 NEXT i
    30 LET h=1: GO SUB 150
    32 LET h=0
-   34 GO SUB 40
-   38 RETURN 
    39 REM Status bar
    40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
    41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
    42 IF m THEN PRINT AT 21,1; INK bg; PAPER ff;a$(m,y(m) TO z(m));
    43 IF rd THEN INK bd: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
    48 RETURN 
+# Get directory path sub
    49 REM Get path
    50 CLS : DIM p$(32)
    51 GO SUB 770
@@ -37,25 +44,39 @@
    56 LET p$(i+1)=SCREEN$ (2,i)
    57 NEXT i
    58 RETURN 
+# Load directory info
    60 GO SUB 770: LET u$="tpi:dirinfo.tap": GO SUB 750
-   61 LET m=0
+## Reset mounted file and top of listing
+   61 LET m=0: LET t=2
    62 GO SUB 770: GO SUB 780: REM LOAD "" DATA a$()
+## Parse info
    63 CLS : PRINT p$''"Working";
    64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36): DIM e(n)
+### Parse any directory names
    65 IF d=0 THEN GO TO 70
    66 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
+#### Set display string
    67 LET b$(i)=d$+"    "+a$(i, TO 28)+g$: LET z(i)=32: LET l$(i)=a$(i,1)
+#### Set jump letter
    68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
    69 NEXT i
+### Parse any file names
    70 IF f=0 THEN GO TO 75
    71 FOR i=d+3 TO n: LET y(i)=5: LET z(i)=22: LET l$(i)=a$(i,5): PRINT ".";
+#### Set jump letter
    72 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
+#### Set display string
    73 LET b$(i)=a$(i, TO 4)+f$+a$(i,5 TO 22)+g$+a$(i,23 TO )
    74 NEXT i
+### Finish display array
    75 LET b$(2)=h$
-   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0
+### Set .. name and listing page top
+   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: LET
+   t=2+19*INT((s-2)/19): LET t=t+(2 AND t<2)+(n-18 AND t>n-18)
+### Set jump letter
    77 LET l$(2)=".": LET y(2)=1: LET z(2)=2
    78 RETURN 
+# Main key input loop
    79 REM Main key input loop
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80
    81 IF (k$=" " OR k=10) AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160
@@ -89,9 +110,11 @@
   109 IF k=226 THEN BEEP 0.1,10*(m>0): IF m THEN LET t$="append": GO TO 4200: REM sym+A
   120 IF k$>="!" AND k$<="z" THEN GO TO 170
   149 GO TO 80
+# Redraw current selection line (h=1 highlight it, or h=0 not)
   150 IF s<=d+2 THEN PRINT AT s-t+2,0; INK df; INVERSE h;"    ";a$(s, TO 28);: GO TO 154
   152 PRINT AT s-t+2,0; INVERSE h; FLASH (s=m);a$(s, TO 4); FLASH 0; INK (ff*(e(s)=0)+2*(e(s)<>0));a$(s,5 TO 22); INK fg;a$(s,23 TO );
   154 RETURN 
+# Update page top t to include displaying current selection s, and redraw if needed
   160 REM Disp is a$(t TO t+18) update t to include s and redraw if needed
   161 LET r=t+18: IF r>n THEN LET r=n: REM disp is t to r
   162 IF s<t THEN LET t=2+19*INT ((s-2)/19): GO TO 166: REM prev pg
@@ -101,6 +124,7 @@
   166 IF t<2 THEN LET t=2
   167 IF t>n THEN LET t=n-18: GO TO 166
   168 GO TO 2008
+# Skip to next entry starting with letter k$
   169 REM Skip to letter
   170 LET t$=l$(s)
   171 LET i=0: LET h=0: GO SUB 150
@@ -111,6 +135,7 @@
   176 LET t$=l$(s)
   178 IF k$<>t$ AND i=0 THEN GO TO 175
   179 GO TO 160
+# Get end column of name of selection into z(s) and file size into sz
   180 REM Get len of a$(s)
   182 FOR j=z(s) TO y(s) STEP -1: IF a$(s,j)<>" " THEN LET z(s)=j: RETURN 
   184 NEXT j
@@ -119,16 +144,18 @@
   194 LET sz=sz/1024/16
   196 IF sz<1 THEN LET sz=1
   198 RETURN 
+# Enter pressed on item
   199 REM Enter pressed on item
-  200 IF m=s THEN GO TO 237
+  200 IF m=s THEN GO TO 237: REM Already mounted
   201 LET h=0: GO SUB 150: LET h=1: GO SUB 150: GO SUB 180: LET t$=a$(s,y(s) TO z(s)): REM File as displayed
-  202 IF s<=d+2 THEN GO TO 300: REM dir
+  202 IF s<=d+2 THEN GO TO 300: REM is a dir
   203 LET m=s
   204 REM Get .ext
   206 LET e$="": LET l=LEN t$
   208 FOR i=l TO 1 STEP -1
   210 IF t$(i)="." THEN LET e$=t$(i TO l): LET n$=t$( TO i-1): GO TO 216
   212 NEXT i
+## Get file extension, ask if needed to confirm or get
   214 LET n$=t$
   216 IF e$="" THEN INPUT "What is the extension? ";e$: GO TO 226
   218 IF l-i>=3 THEN GO TO 230
@@ -141,6 +168,7 @@
   226 IF e$="" THEN GO TO 230
   228 IF e$(1)<>"." THEN LET e$="."+e$
   229 LET t$=n$+e$
+## Mount the file
   230 PRINT #0;"Mounting: ";t$
   231 GO SUB 770
   232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as ""&";a$(s, TO 3);""")": LET u$="tpi:&"+a$(s, TO 3): GO SUB 760: GO TO 235
@@ -157,6 +185,7 @@
   248 INPUT "": GO TO 2008
   250 IF k$="-" THEN GO TO 600
   252 GO TO 4030
+## DCK ROM BIN loading
   260 REM DCK ROM BIN loading
   262 IF k$="-" THEN GO TO 600
   264 PRINT #0;"Load (y/n)? ";
@@ -171,6 +200,7 @@
   320 GO SUB 770: GO SUB 710
   321 IF u<0 THEN GO SUB 450
   330 INPUT "": GO TO 2000
+# General tpi command (except for mounting)
   400 REM tpi command
   410 INPUT "tpi:";t$
   420 IF t$="" THEN GO TO 80
@@ -181,8 +211,9 @@
   452 LET e(s)=1: IF s<d+2 THEN LET b$(s,2)=CHR$ 2
   453 LET b$(s,6)=CHR$ 2
   454 RETURN 
-  499 REM Switch running from AROS to BASIC
-  500 REM Should use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system
+# Switch running from AROS to BASIC and exit
+## We could use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system, but that would need MC
+  500 REM Switch running from AROS to BASIC
   510 INK 0: PAPER 7: BORDER 7: CLS 
   512 IF oe THEN ON ERR \*
   520 IF NOT dock THEN STOP : REM Already in HOME bank
@@ -195,6 +226,7 @@
   542 PRINT "first, where m,n is the bank"
   544 PRINT "that TC was loaded into."
   590 POKE 23750,0: STOP 
+# Do a LOAD "" on mounted file (handling if in DOCK and if .dck file)
   600 IF NOT m THEN BEEP 0.1,0: GO TO 2008
   601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR \*
   602 IF dock THEN GO TO 604
@@ -207,12 +239,15 @@
   609 IF k$="n" OR k$="N" THEN GO TO 2008
   610 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: NEW 
   620 IF NOT m THEN BEEP 0.1,0: GO TO 2008
+## LOAD code from .tap
   622 LOAD ""CODE 
   624 GO TO 4230
+## MERGE from .tap
   630 MERGE ""
   632 INPUT "Exit to BASIC? (y/N):";k$
   634 IF k$="y" OR k$="Y" THEN GO TO 500
   636 GO TO 4230
+# "Reset" by closing file and change to root dir
   649 REM Reset
   650 GO SUB 770
   652 LET u$="tpi:close": GO SUB 700
@@ -220,30 +255,36 @@
   662 LET u$="tpi:cd /": GO SUB 700
   670 LET m=0
   680 GO TO 2000
+# SAVE tpi cmd u$, caller doesn't handle error
   699 REM SAVE tpi, caller doesn't handle error
   700 GO SUB 9: LET f0=f: LET u=1
   702 SAVE u$
   704 IF u>=0 THEN RETURN 
   706 PRINT INVERSE 1;"Failed: SAVE """;u$;""""
   708 GO TO 834
+# SAVE tpi cmd u$, caller handles error
   709 REM SAVE tpi, caller handles error
   710 GO SUB 9: LET f0=f: LET u=1
   712 SAVE u$
   714 RETURN 
+# LOAD tpi cmd u$, caller doesn't handle error
   749 REM LOAD tpi, caller doesn't handle error
   750 GO SUB 9: LET f0=f: LET u=1
   752 LOAD u$
   754 IF u>=0 THEN RETURN 
   756 PRINT INVERSE 1;"Failed: LOAD """;u$;""""
   758 GO TO 834
+# LOAD tpi cmd u$, caller handles error
   759 REM LOAD tpi, caller handles error
   760 GO SUB 9: LET f0=f: LET u=1
   762 LOAD u$
   764 RETURN 
+# NOP tpi cmd sync to force waiting for non-busy pico
   769 REM NOP tpi cmd sync
   770 GO SUB 9: LET f0=f: LET u=1
   774 SAVE "tpi:nop"
   778 RETURN 
+# LOAD dirinfo data
   779 REM Load dirinfo data
   780 GO SUB 9: LET f0=f: LET u=1
   784 LOAD "" DATA a$()
@@ -266,9 +307,12 @@
 #   GO SUB 700: REM SAVE tpi
 #   IF u<0 THEN PRINT "Directory ";d$;" not found"
 # For a LOAD tpi command, call GO SUB 750 or 760
+# Main ON ERR handler
+## Get details of error
   800 LET err=PEEK 23739
   802 LET lin=PEEK 23736+256*PEEK 23737
   804 LET stm=PEEK 23738
+## Get time since f0
   806 GO SUB 9: LET i=f-f0
   810 IF i>=300 THEN GO TO 830: REM Timeout
   812 IF err=13 OR err=21 THEN GO TO 850: REM Break
@@ -278,15 +322,18 @@
   820 PAUSE 20: REM Wait a bit before retry
   822 GO TO lin: REM Retry command
   830 IF err<>19 THEN GO TO 834: REM Other err timeout
+## Pico not responding, reset ON ERR, show error and stop
   832 PRINT INVERSE 1;"TS-Pico not responding."
   834 ON ERR \*
   836 PRINT INVERSE 1;"Error ";c$(err+1);" ";lin;":";stm
   839 STOP 
+## Error from a BREAK 
   850 ON ERR \*
   852 INPUT "BREAK: (S)top or (C)ontinue?";k$
   854 IF k$="s" OR k$="S" THEN STOP 
   856 ON ERR GO TO oe
   858 GO TO 2000
+# Sniff tapdir listing to get current file name into t$ (not used yet)
   899 REM Sniff tapdir listing
   900 LET i=5
   910 IF SCREEN$ (i,0)=">" THEN GO TO 920
@@ -301,6 +348,7 @@
   928 IF j>31 THEN GO TO 930
   929 GO TO 922
   930 RETURN 
+# Delete (tpi:rm) Directory only right now. Should change ts-pico to rm=delete file and rmdir=delete directory
  1099 REM Delete
  1100 GO SUB 180
  1102 LET t$=a$(s,y(s) TO z(s))
@@ -314,6 +362,7 @@
  1118 IF u>=0 THEN GO TO 1122
  1120 INPUT "rm failed. Press enter: ";k$
  1122 GO TO 2000
+# Make new directory (tpi:md)
  1199 REM Make Dir
  1200 INPUT "New dir name: ";t$
  1202 IF t$="" THEN GO TO 80
@@ -325,10 +374,12 @@
  1216 IF u>=0 THEN GO TO 1220
  1218 INPUT "md failed. Press enter: ";k$
  1220 GO TO 2000
+# Main display drawing after first time
  2000 GO SUB 50
  2002 GO SUB 60
  2008 GO SUB 20
  2010 GO TO 80
+# Show key help
  3000 REM help
  3002 CLS 
  3004 PRINT INVERSE 1;"TS-Pico Commander Help"
@@ -352,6 +403,7 @@
  3039 PRINT "sym+X   Quit program"
  3090 INPUT "Press enter:";t$
  3099 GO TO 2008
+# Fast-forward (tpi:ffw) Reshows tapdir after
  4000 REM ffw
  4010 IF NOT m THEN GO TO 80
  4012 CLS 
@@ -371,6 +423,7 @@
  4070 IF k$="a" THEN GO TO 4150
 # 4070 IF k$="m" AND dock THEN GO TO 600
  4098 GO TO 2008
+# Rewind (tpi:rew) Reshows tapdir after
  4100 IF NOT m THEN GO TO 80
  4110 CLS 
  4120 GO SUB 770: LET u$="tpi:rew": GO SUB 700
@@ -378,6 +431,8 @@
  4150 GO SUB 770
  4152 LET u$="tpi:append": GO SUB 700
  4154 GO TO 4030
+# Other common pattern helpers
+## SAVE tpi cmd, no reload
  4200 REM SAVE tpi cmd, no reload
  4210 CLS 
  4212 LET u$="tpi:"+t$
@@ -387,6 +442,7 @@
  4232 PRINT #0;"Press a key..."
  4234 PAUSE 0: INPUT ""
  4236 GO TO 2008
+## SAVE tpi cmd, reload
  4300 REM SAVE tpi cmd, reload
  4310 CLS 
  4312 LET u$="tpi:"+t$
@@ -396,23 +452,27 @@
  4324 PRINT #0;"Press a key..."
  4326 PAUSE 0: INPUT ""
  4330 GO TO 2000
+## LOAD tpi cmd, reload
  4400 REM LOAD tpi cmd, reload
  4410 CLS 
  4412 LET u$="tpi:"+t$
  4414 PRINT #0;u$
  4420 GO SUB 770: GO SUB 750
  4430 GO TO 4322
+## SAVE tpi, no reload, no CLS or prompt or redraw
  4500 REM SAVE tpi, no reload, no CLS or prompt or redraw
  4510 LET u$="tpi:"+t$
  4512 PRINT #0;u$
  4520 GO SUB 770: GO SUB 700
  4530 INPUT ""
  4540 RETURN 
+## SAVE tpi, no reload, no echo, no prompt
  4599 REM SAVE tpi, no reload, no echo, no prompt
  4600 CLS 
  4610 LET u$="tpi:"+t$
  4612 GO SUB 770: GO SUB 700
  4620 GO TO 4324
+## SAVE tpi, no reload, no prompt
  4699 REM SAVE tpi, no reload, no prompt
  4700 CLS 
  4701 LET u$="tpi:"+t$
@@ -420,6 +480,7 @@
  4704 GO SUB 770: GO SUB 700
  4706 INPUT ""
  4708 GO TO 2008
+# Initialization
  9000 REM Init
  9001 LET p=60: LET t$="": LET sz=1
  9002 LET fg=7: LET bg=1: LET bd=bg
@@ -441,6 +502,7 @@
  9032 GO SUB 770: GO SUB 700
  9040 IF SCREEN$ (1,0)="V" THEN GO SUB 770: GO SUB 700
  9050 INK fg: CLS 
+## Determine if we are running from the DOCK bank
  9060 LET nxt=PEEK 23637+256*PEEK 23638
  9062 LET nxtlin=256*PEEK nxt+PEEK (nxt+1)
  9064 LET dock=nxtlin<>9062
