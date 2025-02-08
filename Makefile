@@ -16,4 +16,4 @@ tc.dck: tc.tap
 
 getnew:
 	listbasic tc.tap > tc-new.bas
-	code -d tc.bas tc-new.bas
+	code -d tc-new.bas tc.bas

@@ -4,7 +4,7 @@
     4 REM 
     8 GO TO 10
 # Get FRAMES clock sub
-    9 LET f=256*(256*PEEK 23674+PEEK 23673)+PEEK 23672: RETURN
+    9 LET f=256*(256*PEEK 23674+PEEK 23673)+PEEK 23672: RETURN 
 # Init
    10 GO SUB 9000
 # Get the current path
@@ -29,6 +29,7 @@
    29 NEXT i
    30 LET h=1: GO SUB 150
    32 LET h=0
+   34 PRINT AT 2,0;: REM move from bottom
    39 REM Status bar
    40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
    41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
@@ -71,8 +72,7 @@
 ### Finish display array
    75 LET b$(2)=h$
 ### Set .. name and listing page top
-   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: LET
-   t=2+19*INT((s-2)/19): LET t=t+(2 AND t<2)+(n-18 AND t>n-18)
+   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: LET t=2+19*INT ((s-2)/19): LET t=t+(2 AND t<2)+(n-18 AND t>n-18)
 ### Set jump letter
    77 LET l$(2)=".": LET y(2)=1: LET z(2)=2
    78 RETURN 
