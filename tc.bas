@@ -1,5 +1,5 @@
-    1 REM TS-Pico Commander v0.94
-    2 REM 8 Feb 2025
+    1 REM TS-Pico Commander v0.95
+    2 REM 11 Feb 2025
     3 REM By Ryan Gray
     4 REM 
     8 GO TO 10
@@ -14,7 +14,7 @@
 # Draw the file screen
    16 GO SUB 20
 # Print key for help on first run
-   17 PRINT AT 21,1; INK bg; PAPER ff;"? for help";
+   17 PRINT AT 21,1; INK bg; PAPER ff;"? for help      v0.95"
 # Jump to key loop
    18 GO TO 80
 # Draw current file screen sub
@@ -217,15 +217,26 @@
   510 INK 0: PAPER 7: BORDER 7: CLS 
   512 IF oe THEN ON ERR \*
   520 IF NOT dock THEN STOP : REM Already in HOME bank
+  522 GO SUB 530
+  523 INPUT "Turn off DOCK on NEW (y/N)? ";k$
+  524 IF k$="y" OR k$="Y" THEN GO TO 529
+#                      1111111111222222222233
+#     PRINT "01234567890123456789012345678901"
+  525 PRINT '"To turn off running the DOCK"
+  526 PRINT "program after NEW, use:"
+  527 PRINT " SAVE ""tpi:memdock""CODE 2,0"
+  528 POKE 23750,0: STOP 
+  529 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: STOP 
   530 PRINT "Exiting DOCK bank to HOME bank."
   532 PRINT "Use NEW to run TC again, or use"
   534 PRINT " POKE 23750,128: RUN"
   536 PRINT "to preserve the BASIC program."
-  538 PRINT "If you switch DOCK banks, use"
+  538 PRINT '"If you switch DOCK banks, use"
   540 PRINT " SAVE ""tpi:memdock""CODE m,n"
-  542 PRINT "first, where m,n is the bank"
-  544 PRINT "that TC was loaded into."
-  590 POKE 23750,0: STOP 
+  542 PRINT "first, where m is 1 for SRAM or"
+  544 PRINT "2 for flash, and n is the bank"
+  546 PRINT "that TC was loaded into."
+  559 RETURN 
 # Do a LOAD "" on mounted file (handling if in DOCK and if .dck file)
   600 IF NOT m THEN BEEP 0.1,0: GO TO 2008
   601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR \*
@@ -234,8 +245,8 @@
   604 IF e$=".dck" OR e$=".DCK" THEN GO TO 607
   605 PRINT "Use NEW to run TC again."
   606 POKE 23750,0: LOAD "": STOP 
-  607 PRINT "Exiting DOCK bank to HOME bank."
-  608 PRINT '"To run ";a$(s,y(s) TO z(s));","'"you need to do LOAD """" manually"'"after the system restarts."'': INPUT "Restart (Y/n)? ";k$
+  607 GO SUB 530
+  608 PRINT '"To run ";INK 2;a$(s,y(s) TO z(s));INK 0;","'"you need to do ";INK 1;"LOAD """"";INK 0;" manually"'"after the system restarts."'': INPUT "Restart (Y/n)? ";k$
   609 IF k$="n" OR k$="N" THEN GO TO 2008
   610 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: NEW 
   620 IF NOT m THEN BEEP 0.1,0: GO TO 2008
