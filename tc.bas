@@ -242,7 +242,7 @@
   601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR \*
   602 IF dock THEN GO TO 604
   603 LOAD "": STOP 
-  604 IF e$=".dck" OR e$=".DCK" THEN GO TO 607
+  604 IF e$=".dck" OR e$=".DCK" OR e$=".rom" OR e$=".ROM" OR e$=".bin" OR e$=".BIN" THEN GO TO 607
   605 PRINT "Use NEW to run TC again."
   606 POKE 23750,0: LOAD "": STOP 
   607 GO SUB 530
