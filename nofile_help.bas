@@ -1,0 +1,27 @@
+ 10 REM No file mounted!
+ 20 PAPER 7: INK 0: BORDER 7: FLASH 0: INVERSE 0: CLS
+ 30 PRINT INK 5; PAPER 0;" TIMEX ";INK 0;PAPER 7; BRIGHT 1;" sinclair 2068 ";BRIGHT 0;INK 5;PAPER 0;" TS-Pico "
+ 32 PRINT
+ 40 PRINT FLASH 1; INK 2;"    -- No file mounted! --     "
+ 50 PRINT INK 7;PAPER 0;BRIGHT 1;"        LOAD commands          "
+ 60 PRINT """tpi:dir""","""tpi:name.ext"""
+ 70 PRINT """tpi:path""","""tpi:&nn"""
+ 80 PRINT """tpi:tapdir""","(nn=file index)"
+ 90 PRINT INK 7;PAPER 0;BRIGHT 1;" SAVE commands: [ ]-> optional "
+100 PRINT """filename"" -> save filename.tap"
+110 PRINT """tpi:cd <name>"" [CODE 1]"
+120 PRINT """tpi:tpi:close""", """tpi:append"""
+130 PRINT """tpi:gethelp""","""tpi:md folder"""
+140 PRINT """tpi:getinfo""","""tpi:rm folder"""
+150 PRINT """tpi:sdcard""","""tpi:verbose"""
+160 PRINT """tpi:tape""","""tpi:zx48"""
+170 PRINT """tpi:ffw"" [CODE n,0]"
+180 PRINT """tpi:rew"" [CODE n,0]"
+190 PRINT """tpi:blkrcv"" [CODE n,m]"
+200 PRINT """tpi:blksnd"" [CODE n,0]"
+210 PRINT """tpi:memboot"" CODE n,m"
+220 PRINT """tpi:memdock"" CODE n,m"
+230 PRINT """tpi:getlog"" [CODE n,0]"
+300 PRINT #0;"Press a key, or SPACE for menu"
+310 LET k$=INKEY$: IF k$="" THEN GO TO 310
+320 IF k$=" " THEN INPUT "": CLS: LOAD ""
