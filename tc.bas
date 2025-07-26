@@ -1,5 +1,5 @@
     1 REM TS-Pico Commander v0.96
-    2 REM 22 July 2025
+    2 REM 25 July 2025
     3 REM By Ryan Gray
     4 REM 
 # Init, Get the current path, Load directory info, and Draw the file screen
@@ -34,7 +34,7 @@
    25 FOR i=t TO r+t
    27 PRINT b$(i)
    29 NEXT i
-   30 IF t<=m AND m<t+19 THEN PRINT AT m-t+2,0; FLASH 1; OVER 1; "    "
+   30 IF t<=m AND m<t+19 THEN PRINT AT m-t+2,0; FLASH 1; OVER 1; INK 8; PAPER 8;"    "
    31 LET h=1: GO SUB 150
    32 LET h=0
    34 PRINT AT 2,0;: REM move from bottom
@@ -59,12 +59,12 @@
    62 GO SUB 9: GO SUB 17: REM LOAD "" DATA a$()
 ## Parse info
    63 CLS : PRINT p$''"Working";
-   64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,36): DIM e(n)
+   64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,38): DIM e(n)
 ### Parse any directory names
    65 IF d=0 THEN GO TO 70
    66 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
 #### Set display string
-   67 LET b$(i)=d$+"    "+a$(i, TO 28)+g$: LET z(i)=32: LET l$(i)=a$(i,1)
+   67 LET b$(i)=d$+"    "+a$(i, TO 28)+g$+g$: LET z(i)=32: LET l$(i)=a$(i,1)
 #### Set jump letter
    68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
    69 NEXT i
@@ -74,7 +74,7 @@
 #### Set jump letter
    72 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
 #### Set display string
-   73 LET b$(i)=a$(i, TO 4)+f$+a$(i,5 TO 22)+g$+a$(i,23 TO )
+   73 LET b$(i)=f$+a$(i, TO 4)+g$+a$(i,5 TO 22)+f$+a$(i,23 TO )
    74 NEXT i
 ### Finish display array
    75 LET b$(2)=h$
@@ -94,9 +94,9 @@
    86 IF k=9 AND t+19<=n THEN GO SUB 150: LET s=t+19: GO TO 160: REM sh+8 pgdn close to end
    87 IF k$="#" OR k$="&" THEN LET j$="&": INPUT "": PRINT #0;j$: GO TO 80
    88 IF k$>="0" AND k$<="9" THEN IF j$<>"" THEN LET j$=j$+k$: INPUT "": PRINT #0;j$: LET k$="": LET i=VAL j$(2 TO ): IF f>i THEN GO SUB 150: LET s=d+3+i: GO TO 160: REM num jump
-   90 IF k=12 AND j$<>"" THEN LET j$=j$(TO LEN j$-1): INPUT "": PRINT #0;j$: GO TO 80: REM sh+0
-   91 IF k=200 THEN IF m>=1 THEN CLS: GO TO 4000: REM >= ffw
-   92 IF k=199 THEN IF m>=1 THEN CLS: GO TO 4100: REM <= rew
+   90 IF k=12 AND j$<>"" THEN LET j$=j$( TO LEN j$-1): INPUT "": PRINT #0;j$: GO TO 80: REM sh+0
+   91 IF k=200 THEN IF m>=1 THEN CLS : GO TO 4000: REM >= ffw
+   92 IF k=199 THEN IF m>=1 THEN CLS : GO TO 4100: REM <= rew
    93 IF k$="." THEN LET t$="..": GO TO 310: REM CD ..
    94 IF k$="/" THEN LET t$="verbose": GO TO 4800: REM sym+V
    95 IF k=7 THEN GO SUB 150: LET s=2: LET j$="": GO TO 160: REM sh+1 jump to first file
@@ -123,8 +123,7 @@
 #  150 IF s<=d+2 THEN PRINT AT s-t+2,0; INK df; INVERSE h;"    ";a$(s, TO 28);: GO TO 154
 #  150 IF s<=d+2 THEN PRINT AT s-t+2,0; INVERSE h;b$(s);: GO TO 154
   150 PRINT AT s-t+2,0; INVERSE h;b$(s);
-#  152 PRINT AT s-t+2,0; INVERSE h; FLASH (s=m);a$(s, TO 4); FLASH 0; INK (ff*(e(s)=0)+2*(e(s)<>0));a$(s,5 TO 22); INK fg;a$(s,23 TO );
-  152 IF s=m THEN PRINT AT s-t+2,0; INVERSE h; FLASH 1; OVER 1; "    "
+  152 IF s=m THEN PRINT AT s-t+2,0; INVERSE h; FLASH 1; OVER 1; INK 8; PAPER 8;"    "
   154 RETURN 
 # Update page top t to include displaying current selection s, and redraw if needed
   160 REM Disp is b$(t TO t+18) update t to include s and redraw if needed
@@ -192,7 +191,8 @@
   232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as ""&";a$(s, TO 3);""")": LET u$="tpi:&"+a$(s, TO 3): GO SUB 760: GO TO 235
   234 LET u$="tpi:"+t$: GO SUB 760
   235 IF u<0 THEN GO SUB 450: GO TO 2008
-  236 LET e(s)=0: LET b$(s,6)=CHR$ ff
+# Set color of file to normal in case it was error color
+  236 LET e(s)=0: LET b$(s,8)=CHR$ fg
   237 LET m$=t$
   238 ON ERR \*: IF oe THEN ON ERR GO TO oe
   239 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
@@ -227,13 +227,14 @@
   430 IF t$="dir" OR t$="path" OR t$="tapdir" THEN GO TO 4400
   432 IF LEN t$>=3 AND t$( TO 3)="cd " THEN LET m=0
   440 GO TO 4300
-  450 INPUT FLASH 1;"Failed"; FLASH 0;": ";VAL$ "t$"'"Press Enter:";k$
+  450 INPUT FLASH 1;"Failed"; FLASH 0;": ";(t$)'"Press Enter:";k$
+# Set color of file name to error color
   452 LET e(s)=1: IF s<d+2 THEN LET b$(s,2)=CHR$ 2
-  453 LET b$(s,6)=CHR$ 2
+  453 LET b$(s,8)=CHR$ 2
   454 RETURN 
   459 REM Append toggle
 # If selected file is not mounted, then mount it first
-  460 IF s=m THEN GOTO 4150
+  460 IF s=m THEN GO TO 4150
   462 IF m<1 AND s<d+2 THEN BEEP 0.1,10: GO TO 79
   464 GO TO 200
 # Switch running from AROS to BASIC and exit
@@ -272,7 +273,7 @@
   605 PRINT "Use NEW to run TC again."
   606 POKE 23750,0: LOAD "": STOP 
   607 GO SUB 530
-  608 PRINT '"To run ";INK 2;a$(s,y(s) TO z(s));INK 0;","'"you need to do ";INK 1;"LOAD """"";INK 0;" manually"'"after the system restarts."'': INPUT "Restart (Y/n)? ";k$
+  608 PRINT '"To run "; INK 2;a$(s,y(s) TO z(s)); INK 0;","'"you need to do "; INK 1;"LOAD """""; INK 0;" manually"'"after the system restarts."'': INPUT "Restart (Y/n)? ";k$
   609 IF k$="n" OR k$="N" THEN GO TO 2008
   610 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: NEW 
   620 IF m<1 THEN BEEP 0.1,0: GO TO 2008
@@ -356,7 +357,7 @@
   900 LET i=5: LET t$="": LET u$=""
   910 IF SCREEN$ (i,0)=">" THEN GO TO 920
   912 LET i=i+1
-  914 IF i>21 THEN RETURN
+  914 IF i>21 THEN RETURN 
   918 GO TO 910
   920 IF SCREEN$ (i,19)="N" THEN GO TO 930
 # This could be used to customize the tapdir menu, but it
@@ -372,7 +373,7 @@
   938 NEXT j
   939 RETURN 
 # Get mounted file extension from getinfo screen
-  950 CLS: GO SUB 9: LET i=11
+  950 CLS : GO SUB 9: LET i=11
   952 LET u$="tpi:getinfo": GO SUB 11
   954 IF SCREEN$ (i,0)<>">" THEN LET i=i+1: GO TO 954
   956 LET i=i-1: LET j=31: LET e$=""
@@ -415,37 +416,40 @@
 # Show key help
  3000 REM help
  3002 CLS 
- 3004 PRINT INVERSE 1;"TS-Pico Commander Help"
- 3005 PRINT "Up/Down Move selection"
- 3006 PRINT "Space   Move down"
- 3007 PRINT "<-/->   Page up/down"
- 3008 PRINT "EDIT    Move to first file"
- 3009 PRINT "&nnn    Skip to file by number"
- 3010 PRINT "DELETE  Backspace skip to number"
- 3011 PRINT "a-z     Skip to file by letter"
- 3012 PRINT "Enter   Mount file or change dir"
- 3013 PRINT "%       Close mounted file"
- 3014 PRINT ". or /  cd .. or cd /"
- 3015 PRINT ">=      ffw & tapdir"
- 3016 PRINT "<=      rew & tapdir"
- 3020 PRINT "sym+J   LOAD """"   sym+K  tapdir"
- 3022 PRINT "sym+I   getinfo   sym+D  md"
- 3024 PRINT "sym+H   gethelp   sym+A  append"
- 3026 PRINT "sym+L   getlog    sym+V  verbose"
- 3028 PRINT ":       Enter a tpi command"
- 3030 PRINT "!       Reset: close,cd /"
- 3032 PRINT "sym+0   Remove empty directory"
- 3034 PRINT "sym+X   Quit program"
+ 3004 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7; BRIGHT 1;" TS-Pico Commander "; BRIGHT 0; INK 5; PAPER 0;" Help "
+ 3005 PRINT INK df;"Up/Down"; INK fg;" Move selection"
+ 3006 PRINT INK df;"Space  "; INK fg;" Move down"
+ 3007 PRINT INK df;"<- / ->"; INK fg;" Page up/down"
+ 3008 PRINT INK df;"EDIT   "; INK fg;" Move to first file"
+ 3009 PRINT INK df;"&nnn   "; INK fg;" Skip to file by number"
+ 3010 PRINT INK df;"DELETE "; INK fg;" Backspace skip to number"
+ 3011 PRINT INK df;"a-z    "; INK fg;" Skip to file by letter"
+ 3012 PRINT INK df;"Enter  "; INK fg;" Mount file or change dir"
+ 3013 PRINT INK df;"%      "; INK fg;" Close mounted file"
+ 3014 PRINT INK df;". or / "; INK fg;" cd .. or cd /"
+ 3015 PRINT INK df;">=     "; INK fg;" ffw & tapdir"
+ 3016 PRINT INK df;"<=     "; INK fg;" rew & tapdir"
+ 3020 PRINT INK df;"sym+J  "; INK fg;" LOAD """"   sym+K  tapdir"
+ 3022 PRINT INK df;"sym+I  "; INK fg;" getinfo   sym+D  md"
+ 3024 PRINT INK df;"sym+H  "; INK fg;" gethelp   sym+A  append"
+ 3026 PRINT INK df;"sym+L  "; INK fg;" getlog    sym+V  verbose"
+ 3028 PRINT INK df;":      "; INK fg;" Enter a tpi command"
+ 3030 PRINT INK df;"!      "; INK fg;" Reset: close,cd /"
+ 3032 PRINT INK df;"sym+0  "; INK fg;" Remove empty directory"
+ 3034 PRINT INK df;"sym+X  "; INK fg;" Quit program"
  3090 INPUT "Press enter:";t$
  3099 GO TO 2008
 # Fast-forward (tpi:ffw) Reshows tapdir after
  4000 REM ffw
  4020 GO SUB 9: LET u$="tpi:ffw": GO SUB 11
  4030 GO SUB 9: LET u$="tpi:tapdir": GO SUB 14
- 4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad, "; INVERSE 1;"C"; INVERSE 0;"ode, ";
-# 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge, ";
- 4054 PRINT #0; INVERSE 1;"A"; INVERSE 0;"ppend, ";
- 4056 PRINT #0; INVERSE 1;"<="; INVERSE 0;" or "; INVERSE 1;">=";
+#Load Merge Code Append <= >= X
+ 4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad "; INVERSE 1;"C"; INVERSE 0;"ode ";
+# MERGE could be available in the utility version
+# 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge ";
+ 4054 PRINT #0; INVERSE 1;"A"; INVERSE 0;"ppend ";
+ 4056 PRINT #0; INVERSE 1;"<="; INVERSE 0;" "; INVERSE 1;">=";
+ 4058 PRINT #0;" "; INVERSE 1;"X"
  4060 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 4060
  4061 INPUT ""
  4062 IF k=200 THEN PRINT AT 0,0;: GO TO 4000
@@ -510,7 +514,7 @@
  4706 INPUT ""
  4708 GO TO 2008
  4799 REM Save tpi, no reload, no prompt, getinfo 
- 4800 CLS: LET u$="tpi:"+t$
+ 4800 CLS : LET u$="tpi:"+t$
  4810 PRINT #0;u$
  4820 GO SUB 9: GO SUB 11
  4830 INPUT ""
@@ -524,7 +528,7 @@
  9004 LET s=-1: LET t=2: LET m=0
  9005 LET p$="": LET q=0: LET h=0
  9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
- 9007 LET h$=d$+"    ..                          "+g$
+ 9007 LET h$=d$+"    ..                          "+g$+g$
  9009 LET oe=800: REM line num for ON ERR handling, 0=no on err
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
@@ -545,7 +549,7 @@
  9099 RETURN 
 # Variables
 # a$(n,32)=dirinfo
-# b$(n,36) same but with two sets of color control codes added
+# b$(n,38) same but with three sets of color control codes added
 # d=num if dirs in a$
 # f=num if files in a$
 # n=d+f+2 = rows of a$
