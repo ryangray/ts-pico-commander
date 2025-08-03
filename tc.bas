@@ -1,11 +1,11 @@
-    1 REM TS-Pico Commander v0.96
-    2 REM 25 July 2025
+    1 REM TS-Pico Commander
+    2 REM 3 August 2025
     3 REM By Ryan Gray
     4 REM 
 # Init, Get the current path, Load directory info, and Draw the file screen
     5 GO SUB 9000: GO SUB 50: GO SUB 60: GO SUB 20
 # Print key for help on first run
-    6 PRINT AT 21,1; INK bg; PAPER ff;"? for help      v0.96"
+    6 PRINT AT 21,1; INK bg; PAPER ff;"? for help      v0.97"
 # Jump to key loop
     7 GO TO 79
 # Get FRAMES clock sub
@@ -28,7 +28,7 @@
    19 REM Show listing
    20 INK fg: PAPER bg: BORDER bd: CLS 
    21 PRINT PAPER bd;p$;
-   22 PRINT '; INK bg; PAPER ff;" #  FILE NAME              SIZE "
+   22 PRINT '; INK bg; PAPER ff;" #  FILE"; INK df;"/DIR"; INK bg;" NAME          SIZE "
    23 IF rd THEN INK bd: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
    24 LET r=18: IF r+t>n THEN LET r=n-t
    25 FOR i=t TO r+t
@@ -46,10 +46,10 @@
    48 RETURN 
 # Get directory path sub
    49 REM Get path
-   50 CLS : DIM p$(32)
+   50 DIM p$(32)
    52 GO SUB 9: LET u$="tpi:path": GO SUB 14
    54 FOR i=0 TO 31
-   56 LET p$(i+1)=SCREEN$ (2,i)
+   56 LET p$(i+1)=SCREEN$ (4,i)
    57 NEXT i
    58 RETURN 
 # Load directory info
@@ -58,13 +58,13 @@
    61 LET m=-1: LET t=2
    62 GO SUB 9: GO SUB 17: REM LOAD "" DATA a$()
 ## Parse info
-   63 CLS : PRINT p$''"Working";
+   63 PRINT p$''"Working";
    64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,38): DIM e(n)
 ### Parse any directory names
    65 IF d=0 THEN GO TO 70
    66 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
 #### Set display string
-   67 LET b$(i)=d$+"    "+a$(i, TO 28)+g$+g$: LET z(i)=32: LET l$(i)=a$(i,1)
+   67 LET b$(i)=d$+">   "+a$(i, TO 28)+g$+g$: LET z(i)=32: LET l$(i)=a$(i,1)
 #### Set jump letter
    68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
    69 NEXT i
@@ -79,15 +79,15 @@
 ### Finish display array
    75 LET b$(2)=h$
 ### Set .. name and listing page top
-   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: LET t=2+19*INT ((s-2)/19): LET t=t+(2 AND t<2)+(n-18 AND t>n-18)
+   76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: GO SUB 140
 ### Set jump letter
-   77 LET l$(2)=".": LET y(2)=1: LET z(2)=2
+   77 LET l$(2)=".": LET y(2)=1: LET z(2)=2: IF p$="/TAP                            " THEN LET b$(2,3 TO 8)="      ": LET s=3
    78 RETURN 
 # Main key input loop
    79 LET j$="": INPUT ""
    80 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 80: REM Main key input loop
    81 IF k=13 THEN GO TO 200: REM Enter
-   82 IF (k=10 OR k$=" ") AND s<n THEN GO SUB 150: LET s=s+1: GO TO 160: REM sh+6 Down
+   82 IF (k=10 OR k$=" ") AND s<n THEN GO SUB 150: LET s=s+1: LET x=1: GO TO 160: REM sh+6 Down
    83 IF k=11 AND s>2 THEN GO SUB 150: LET s=s-1: GO TO 160: REM sh+7 Up
    84 IF k=8 AND s-19>=2 THEN GO SUB 150: LET s=s-19: GO TO 160: REM sh+5 pgup
    85 IF k=9 AND s+19<=n THEN GO SUB 150: LET s=s+19: GO TO 160: REM sh+8 pgdn
@@ -118,23 +118,27 @@
 #  109 IF k=4 THEN REM sh+3
 #  110 IF k=5 THEN REM sh+4
 #  111 IF k=15 THEN REM sh+9
-  149 GO TO 80
+  129 IF NOT x THEN GO TO 80
+# Find length of selected name
+  130 IF a$(s,z(s))<>" " THEN LET x=0: GO TO 80
+  134 LET k$=INKEY$: LET k=CODE k$: IF k$<>"" THEN GO TO 81
+  136 IF z(s)>y(s) THEN LET z(s)=z(s)-1: GO TO 130
+  139 GO TO 80
+  140 REM Calc page top t from s
+  142 LET t=2+19*INT ((s-2)/19)
+  144 IF t<2 THEN LET t=2
+  146 IF t>n THEN LET t=n-18: GO TO 144
+  148 RETURN 
 # Redraw current selection line (h=1 highlight it, or h=0 not)
-#  150 IF s<=d+2 THEN PRINT AT s-t+2,0; INK df; INVERSE h;"    ";a$(s, TO 28);: GO TO 154
-#  150 IF s<=d+2 THEN PRINT AT s-t+2,0; INVERSE h;b$(s);: GO TO 154
   150 PRINT AT s-t+2,0; INVERSE h;b$(s);
   152 IF s=m THEN PRINT AT s-t+2,0; INVERSE h; FLASH 1; OVER 1; INK 8; PAPER 8;"    "
   154 RETURN 
 # Update page top t to include displaying current selection s, and redraw if needed
   160 REM Disp is b$(t TO t+18) update t to include s and redraw if needed
   161 LET r=t+18: IF r>n THEN LET r=n: REM disp is t to r
-  162 IF s<t THEN LET t=2+19*INT ((s-2)/19): GO TO 166: REM prev pg
-  163 IF s>r THEN LET t=2+19*INT ((s-2)/19): GO TO 166: REM next pg
-  164 LET h=1: GO SUB 150
-  165 LET h=0: GO TO 80
-  166 IF t<2 THEN LET t=2
-  167 IF t>n THEN LET t=n-18: GO TO 166
-  168 GO SUB 20: INPUT "": PRINT #0;j$: GO TO 80
+  162 IF s>=t AND s<=r THEN LET h=1: GO SUB 150: LET h=0: GO TO 129
+  163 GO SUB 140
+  166 GO SUB 20: INPUT "": PRINT #0;j$: GO TO 129
 # Skip to next entry starting with letter k$
   169 REM Skip to letter
   170 LET t$=l$(s)
@@ -146,20 +150,23 @@
   176 LET t$=l$(s)
   178 IF k$<>t$ AND i=0 THEN GO TO 175
   179 GO TO 160
-# Get end column of name of selection into z(s) and file size into sz
-  180 REM Get len of a$(s)
-  182 FOR j=z(s) TO y(s) STEP -1: IF a$(s,j)<>" " THEN LET z(s)=j: RETURN 
-  184 NEXT j
-  190 LET sz=VAL a$(s,23 TO 30)
-  193 IF a$(s,31)="K" THEN LET sz=sz*1024
-  194 LET sz=sz/1024/16
-  196 IF sz<1 THEN LET sz=1
-  198 RETURN 
+# Get end column of name of selection into z(s) and trimmed name into t$
+  180 REM Put trimmed a$(s) into t$ 
+  182 IF a$(s,z(s))<>" " THEN GO TO 188
+  184 FOR j=z(s) TO y(s) STEP -1: IF a$(s,j)<>" " THEN LET z(s)=j: GO TO 188
+  186 NEXT j
+  188 LET t$=a$(s,y(s) TO z(s)): RETURN 
+# Get selected file size into sz
+#  190 LET sz=VAL a$(s,23 TO 30)
+#  193 IF a$(s,31)="K" THEN LET sz=sz*1024
+#  194 LET sz=sz/1024/16
+#  196 IF sz<1 THEN LET sz=1
+#  198 RETURN 
 # Enter pressed on item
   199 REM Enter pressed on item
   200 IF m=s THEN GO TO 238: REM Already mounted
-  201 LET h=0: GO SUB 150: LET h=1: GO SUB 150: GO SUB 180: LET t$=a$(s,y(s) TO z(s)): REM File as displayed
-  202 IF s<=d+2 THEN GO TO 300: REM is a dir
+  201 PRINT #0;a$(s,y(s) TO z(s)): GO SUB 180: IF s<=d+2 THEN GO TO 300: REM is a dir
+  202 LET h=0: GO SUB 150: LET h=1: GO SUB 150: REM File as displayed
   203 LET m=s
   204 REM Get .ext
   205 LET e$="": LET l=LEN t$
@@ -169,7 +176,7 @@
 ## Get file extension, ask if needed to confirm or get
   209 LET n$=t$
   210 IF e$="" THEN GO TO 226
-  211 IF l-i>=3 THEN GO TO 230
+  211 INPUT "": IF l-i>=3 THEN GO TO 230
   212 LET x$="": IF e$=".ta" OR e$=".TA" OR e$=".t" OR e$=".T" THEN LET x$=".tap"
   213 IF e$=".dc" OR e$=".DC" OR e$=".d" OR e$=".D" THEN LET x$=".dck"
   214 IF e$=".bi" OR e$=".BI" OR e$=".b" OR e$=".B" THEN LET x$=".bin"
@@ -216,14 +223,14 @@
   300 REM cd
   302 LET q=s
   310 LET u$="tpi:cd "+t$
-  311 PRINT #0;u$
+  311 INPUT "": PRINT #0;u$
   320 GO SUB 9: GO SUB 710
   321 IF u<0 THEN GO SUB 450
   330 INPUT "": GO TO 2000
 # General tpi command (except for mounting)
   400 REM tpi command
   410 INPUT "tpi:";t$
-  420 IF t$="" THEN GO TO 79
+  420 IF t$="" THEN GO SUB 20: GO TO 79
   430 IF t$="dir" OR t$="path" OR t$="tapdir" THEN GO TO 4400
   432 IF LEN t$>=3 AND t$( TO 3)="cd " THEN LET m=0
   440 GO TO 4300
@@ -385,7 +392,6 @@
 # Delete (tpi:rm) Directory only right now. Should change ts-pico to rm=delete file and rmdir=delete directory
  1099 REM Delete
  1100 GO SUB 180
- 1102 LET t$=a$(s,y(s) TO z(s))
  1104 IF s<3 OR s>d+2 THEN BEEP 0.1,0: GO TO 79: REM rmdir only for now
  1106 INPUT "Remove "+t$+" (y/N)?";k$
  1108 IF k$<>"y" AND k$<>"Y" THEN GO TO 79
@@ -408,15 +414,16 @@
  1216 IF u>=0 THEN GO TO 1220
  1218 INPUT "md failed. Press enter: ";k$
  1220 GO TO 2000
-# Main display drawing after first time
- 2000 GO SUB 50
- 2002 GO SUB 60
+# Main display and re-get dirinfo
+ 2000 CLS : PRINT 
+ 2002 GO SUB 50
+ 2004 GO SUB 60
  2008 GO SUB 20
  2010 GO TO 79
 # Show key help
  3000 REM help
  3002 CLS 
- 3004 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7; BRIGHT 1;" TS-Pico Commander "; BRIGHT 0; INK 5; PAPER 0;" Help "
+ 3004 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 5; PAPER 0;" Help "
  3005 PRINT INK df;"Up/Down"; INK fg;" Move selection"
  3006 PRINT INK df;"Space  "; INK fg;" Move down"
  3007 PRINT INK df;"<- / ->"; INK fg;" Page up/down"
@@ -522,26 +529,28 @@
  4850 GO TO 4200
 # Initialization
  9000 REM Init
- 9001 LET p=60: LET t$="": LET sz=1
+ 9001 LET p=60: LET t$="": LET x=0
+#: LET sz=1
  9002 LET fg=7: LET bg=1: LET bd=bg
  9003 LET ff=5: LET df=6: LET rd=1
  9004 LET s=-1: LET t=2: LET m=0
  9005 LET p$="": LET q=0: LET h=0
  9006 LET d$=CHR$ 16+CHR$ df: LET f$=CHR$ 16+CHR$ ff: LET g$=CHR$ 16+CHR$ fg
- 9007 LET h$=d$+"    ..                          "+g$+g$
+ 9007 LET h$=d$+">   ..                          "+g$+g$
  9009 LET oe=800: REM line num for ON ERR handling, 0=no on err
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
  9012 INVERSE 0: CLS 
- 9013 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
- 9014 LET c0=0: LET j$="": LET m$=""
+ 9013 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 5; PAPER 0;" 0.97 "
+ 9014 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ 9015 LET c0=0: LET j$="": DIM m$(22)
  9019 REM Set error handling
  9020 IF oe THEN ON ERR GO TO oe
  9029 REM Turn off tpi:verbose
  9030 LET u$="tpi:verbose"
  9032 GO SUB 9: GO SUB 11
- 9040 IF SCREEN$ (1,0)="V" THEN GO SUB 9: GO SUB 11
- 9050 INK fg: CLS 
+ 9040 IF SCREEN$ (2,0)="V" THEN GO SUB 9: GO SUB 11
+ 9050 INK fg
 ## Determine if we are running from the DOCK bank
  9060 LET nxt=PEEK 23637+256*PEEK 23638
  9062 LET nxtlin=256*PEEK nxt+PEEK (nxt+1)
@@ -551,6 +560,7 @@
 # a$(n,32)=dirinfo
 # b$(n,38) same but with three sets of color control codes added
 # d=num if dirs in a$
+# e(n) = If file mounting had an error previously
 # f=num if files in a$
 # n=d+f+2 = rows of a$
 # z(i)=end of a$(i),i>2
@@ -559,6 +569,7 @@
 # p$(32)=path
 # s=selected file
 # m=mounted file num (-1 if dirinfo.tap is mounted)
+# x = Are we determining the file name length?
 # k$=INKEY$ k=CODE k$
 # t$=tpi cmd or a file
 # h=1 if line drawn is for selected file
@@ -576,28 +587,6 @@
 # j$ = multi-digit typing for jumping by number
 # m$ = mounted file name (with corrected extension)
 # oe = ON ERR error handling enabled
-#
-# 9199 REM Load machine code
-# 9200 LET rt=PEEK 23730+256*PEEK 23731
-# 9202 RETURN
-#
-# 9300 RESTORE
-# 9302 LET ok=1: READ nb
-# 9304 FOR a=1 TO nb
-# 9306 READ x: IF PEEK (rt+a)<>x THEN LET ok=0: RETURN
-# 9308 NEXT a
-# 9310 RETURN
-#
-# 9400 CLEAR rt-nb
-# 9402 GO SUB 9200
-# 9404 RESTORE
-# 9406 READ nb
-# 9408 FOR a=1 TO nb
-# 9410 READ x: POKE rt+a, x
-# 9412 NEXT a
-# 9414 RETURN
-#
-# 9500 DATA 0
 #
 # Steps for a dck file:
 #
