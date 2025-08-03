@@ -5,7 +5,7 @@
 # Init, Get the current path, Load directory info, and Draw the file screen
     5 GO SUB 9000: GO SUB 50: GO SUB 60: GO SUB 20
 # Print key for help on first run
-    6 PRINT AT 21,1; INK bg; PAPER ff;"? for help      v0.97"
+    6 PRINT AT 21,9; INK 0; PAPER 7;"? for help       v0.97"
 # Jump to key loop
     7 GO TO 79
 # Get FRAMES clock sub
@@ -27,8 +27,8 @@
 # Draw current file screen sub
    19 REM Show listing
    20 INK fg: PAPER bg: BORDER bd: CLS 
-   21 PRINT PAPER bd;p$;
-   22 PRINT '; INK bg; PAPER ff;" #  FILE"; INK df;"/DIR"; INK bg;" NAME          SIZE "
+   21 PRINT INK df; PAPER bd;p$
+   22 PRINT INK 5; PAPER 0;" &  "; INK 0; PAPER 7;" NAME             "; PAPER 2; INK 4;"\ :"; INK 5; PAPER 0;"\:  SIZE   "
    23 IF rd THEN INK bd: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
    24 LET r=18: IF r+t>n THEN LET r=n-t
    25 FOR i=t TO r+t
@@ -39,9 +39,8 @@
    32 LET h=0
    34 PRINT AT 2,0;: REM move from bottom
    39 REM Status bar
-   40 PRINT AT 21,0; INK bg; PAPER ff;"                       TPI Cmdr ";
-   41 IF t+19<n THEN PRINT INK bg; PAPER ff;CHR$ 8;".";AT 21,0;
-   42 IF m>0 THEN PRINT AT 21,1; INK bg; PAPER ff;m$;
+   40 PRINT AT 21,0; INK 5; PAPER 0;" tpiCmdr"; INK 0; PAPER 7;"\:                        ";CHR$ 8;">" AND t+19<n;AT 0,0;
+   42 IF m>0 THEN PRINT AT 21,9; INK 0; PAPER 7;m$;
    43 IF rd THEN INK bd: PAPER ff: PLOT 0,1: DRAW 0,-1: DRAW 1,0: PLOT 254,0: DRAW 1,0: DRAW 0,1: INK fg: PAPER bg
    48 RETURN 
 # Get directory path sub
@@ -55,24 +54,24 @@
 # Load directory info
    60 GO SUB 9: LET u$="tpi:dirinfo.tap": GO SUB 14
 ## Reset mounted file and top of listing
-   61 LET m=-1: LET t=2
+   61 LET m=-1: LET t=2: PRINT 
    62 GO SUB 9: GO SUB 17: REM LOAD "" DATA a$()
 ## Parse info
-   63 PRINT p$''"Working";
+   63 PRINT '"Working";
    64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,38): DIM e(n)
 ### Parse any directory names
    65 IF d=0 THEN GO TO 70
-   66 FOR i=1+2 TO d+2: LET y(i)=1: PRINT ".";
-#### Set display string
-   67 LET b$(i)=d$+">   "+a$(i, TO 28)+g$+g$: LET z(i)=32: LET l$(i)=a$(i,1)
+   66 FOR i=3 TO d+2: PRINT ".";: LET k$=a$(i,1): LET k=CODE k$
 #### Set jump letter
-   68 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
+   67 LET l$(i)=k$: IF k>=65 AND k<=90 THEN LET l$(i)=CHR$ (k+32)
+#### Set display string
+   68 LET b$(i)=d$+">   "+a$(i, TO 28)+g$+g$: LET y(i)=1: LET z(i)=32
    69 NEXT i
 ### Parse any file names
    70 IF f=0 THEN GO TO 75
-   71 FOR i=d+3 TO n: LET y(i)=5: LET z(i)=22: LET l$(i)=a$(i,5): PRINT ".";
+   71 FOR i=d+3 TO n: PRINT ".";: LET y(i)=5: LET z(i)=22: LET k$=a$(i,5): LET k=CODE k$
 #### Set jump letter
-   72 IF l$(i)>="a" AND l$(i)<="z" THEN LET l$(i)=CHR$ (CODE l$(i)-32)
+   72 LET l$(i)=k$: IF k>=65 AND k<=90 THEN LET l$(i)=CHR$ (k+32)
 #### Set display string
    73 LET b$(i)=f$+a$(i, TO 4)+g$+a$(i,5 TO 22)+f$+a$(i,23 TO )
    74 NEXT i
@@ -81,7 +80,7 @@
 ### Set .. name and listing page top
    76 LET a$(2)="..": LET s=2: IF q AND t$=".." THEN LET s=q: LET q=0: GO SUB 140
 ### Set jump letter
-   77 LET l$(2)=".": LET y(2)=1: LET z(2)=2: IF p$="/TAP                            " THEN LET b$(2,3 TO 8)="      ": LET s=3
+   77 LET l$(2)=".": LET y(2)=1: LET z(2)=2: IF p$="/TAP                            " THEN LET b$(2,8)=" ": LET a$(2,2)=" ": LET z(2)=1
    78 RETURN 
 # Main key input loop
    79 LET j$="": INPUT ""
@@ -92,20 +91,20 @@
    84 IF k=8 AND s-19>=2 THEN GO SUB 150: LET s=s-19: GO TO 160: REM sh+5 pgup
    85 IF k=9 AND s+19<=n THEN GO SUB 150: LET s=s+19: GO TO 160: REM sh+8 pgdn
    86 IF k=9 AND t+19<=n THEN GO SUB 150: LET s=t+19: GO TO 160: REM sh+8 pgdn close to end
-   87 IF k$="#" OR k$="&" THEN LET j$="&": INPUT "": PRINT #0;j$: GO TO 80
-   88 IF k$>="0" AND k$<="9" THEN IF j$<>"" THEN LET j$=j$+k$: INPUT "": PRINT #0;j$: LET k$="": LET i=VAL j$(2 TO ): IF f>i THEN GO SUB 150: LET s=d+3+i: GO TO 160: REM num jump
-   90 IF k=12 AND j$<>"" THEN LET j$=j$( TO LEN j$-1): INPUT "": PRINT #0;j$: GO TO 80: REM sh+0
+   87 IF k$="#" OR k$="&" THEN LET j$="&": INPUT "": PRINT #0; INK df;j$: GO TO 80
+   88 IF k$>="0" AND k$<="9" THEN IF j$<>"" THEN LET j$=j$+k$: INPUT "": PRINT #0; INK df;j$: LET k$="": LET i=VAL j$(2 TO ): IF f>i THEN GO SUB 150: LET s=d+3+i: GO TO 160: REM num jump
+   90 IF k=12 AND j$<>"" THEN LET j$=j$( TO LEN j$-1): INPUT "": PRINT #0; INK df;j$: GO TO 80: REM sh+0
    91 IF k=200 THEN IF m>=1 THEN CLS : GO TO 4000: REM >= ffw
    92 IF k=199 THEN IF m>=1 THEN CLS : GO TO 4100: REM <= rew
    93 IF k$="." THEN LET t$="..": GO TO 310: REM CD ..
    94 IF k$="/" THEN LET t$="verbose": GO TO 4800: REM sym+V
    95 IF k=7 THEN GO SUB 150: LET s=2: LET j$="": GO TO 160: REM sh+1 jump to first file
    96 IF k$=":" THEN GO TO 400: REM tpi cmd
-   97 IF k$="+" THEN CLS : GO TO 4030: REM sym+K tapdir
+   97 IF k$="+" THEN GO TO 470: REM sym+K tapdir
    98 IF k=172 THEN LET t$="getinfo": GO TO 4200: REM sym+I
    99 IF k$="=" THEN LET t$="getlog": GO TO 4700: REM sym+L
   100 IF k$="%" THEN LET t$="close": LET m=0: GO SUB 4500: PRINT AT 0,0;: GO SUB 21: GO TO 79
-  101 IF k$="^" THEN LET t$="gethelp": GO TO 4700: REM sym+H
+  101 IF k$="^" THEN LET t$="gethelp": GO TO 4300: REM sym+H
   102 IF k$="?" THEN GO TO 3000: REM TC help
   103 IF k$="-" THEN GO TO 200: REM sym+J mount+LOAD ""
   104 IF k$="!" THEN GO TO 650: REM Reset
@@ -138,12 +137,12 @@
   161 LET r=t+18: IF r>n THEN LET r=n: REM disp is t to r
   162 IF s>=t AND s<=r THEN LET h=1: GO SUB 150: LET h=0: GO TO 129
   163 GO SUB 140
-  166 GO SUB 20: INPUT "": PRINT #0;j$: GO TO 129
+  166 GO SUB 20: INPUT "": PRINT #0; INK df;j$: GO TO 129
 # Skip to next entry starting with letter k$
   169 REM Skip to letter
   170 LET t$=l$(s)
   171 LET i=0: LET h=0: GO SUB 150
-  172 IF k$>="a" AND k$<="z" THEN LET k$=CHR$ (CODE k$-32)
+#  172 IF k$>="a" AND k$<="z" THEN LET k$=CHR$ (CODE k$-32)
   173 IF k$=t$ THEN IF s<n THEN IF l$(s+1)=k$ THEN LET s=s+1: GO SUB 150: GO TO 160
   174 IF k$=t$ AND s=n THEN GO TO 79
   175 LET s=s+1: IF s>n THEN LET s=2: LET i=1
@@ -165,7 +164,7 @@
 # Enter pressed on item
   199 REM Enter pressed on item
   200 IF m=s THEN GO TO 238: REM Already mounted
-  201 PRINT #0;a$(s,y(s) TO z(s)): GO SUB 180: IF s<=d+2 THEN GO TO 300: REM is a dir
+  201 INPUT "": PRINT #0; INK df;a$(s,y(s) TO z(s)): GO SUB 180: IF s<=d+2 THEN GO TO 300: REM is a dir
   202 LET h=0: GO SUB 150: LET h=1: GO SUB 150: REM File as displayed
   203 LET m=s
   204 REM Get .ext
@@ -181,8 +180,8 @@
   213 IF e$=".dc" OR e$=".DC" OR e$=".d" OR e$=".D" THEN LET x$=".dck"
   214 IF e$=".bi" OR e$=".BI" OR e$=".b" OR e$=".B" THEN LET x$=".bin"
   215 IF e$=".ro" OR e$=".RO" OR e$=".r" OR e$=".R" THEN LET x$=".rom"
-  216 IF x$<>"" THEN PRINT #0;"Is the extension """;(x$);"""? (y/n)";
-  220 IF x$="" THEN PRINT #0;"Found extension of """;(e$);""","'"correct (y/n)? ";
+  216 IF x$<>"" THEN PRINT #0; INK df;"Is the extension """;(x$);"""? (y/n)";
+  220 IF x$="" THEN PRINT #0; INK df;"Found extension of """;(e$);""","'"correct (y/n)? ";
   221 LET k$=INKEY$: IF k$="" THEN GO TO 221
   222 IF k$="n" OR k$="N" THEN PRINT #0;k$: GO TO 226
   223 IF k$<>"y" AND k$<>"Y" THEN GO TO 221
@@ -193,7 +192,7 @@
   228 IF e$(1)<>"." THEN LET e$="."+e$
   229 LET t$=n$+e$
 ## Mount the file
-  230 PRINT #0;"Mounting: ";t$
+  230 PRINT #0; INK df;"Mounting: ";t$
   231 GO SUB 9
   232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as ""&";a$(s, TO 3);""")": LET u$="tpi:&"+a$(s, TO 3): GO SUB 760: GO TO 235
   234 LET u$="tpi:"+t$: GO SUB 760
@@ -215,7 +214,7 @@
 ## DCK ROM BIN loading
   260 REM DCK ROM BIN loading
   262 IF k$="-" THEN GO TO 600
-  264 PRINT #0;"Load (y/n)? ";
+  264 PRINT #0; INK df;"Load (y/n)? ";
   270 LET k$=INKEY$: IF k$="" THEN GO TO 270
   280 IF k$="y" OR k$="Y" THEN PRINT #0;k$: GO TO 600
   282 IF k$="n" OR k$="N" THEN PRINT #0;k$: GO TO 2008
@@ -223,7 +222,7 @@
   300 REM cd
   302 LET q=s
   310 LET u$="tpi:cd "+t$
-  311 INPUT "": PRINT #0;u$
+  311 INPUT "": PRINT #0; INK df;u$
   320 GO SUB 9: GO SUB 710
   321 IF u<0 THEN GO SUB 450
   330 INPUT "": GO TO 2000
@@ -244,12 +243,16 @@
   460 IF s=m THEN GO TO 4150
   462 IF m<1 AND s<d+2 THEN BEEP 0.1,10: GO TO 79
   464 GO TO 200
+  469 REM tapdir
+  470 IF s=m THEN CLS : GO TO 4030
+  472 IF m<1 AND s<d+2 THEN BEEP 0.1,10: GO TO 79
+  474 GO TO 200
 # Switch running from AROS to BASIC and exit
 ## We could use the Toolkit method to stash these vars and restore regular BASIC vars for the BASIC system, but that would need MC
   500 REM Switch running from AROS to BASIC
+  502 IF m=-1 THEN LET t$="close": GO SUB 4500: REM unmount dirinfo.tap
   510 INK 0: PAPER 7: BORDER 7: CLS 
-  512 IF oe THEN ON ERR \*
-  514 IF m=-1 THEN LET t$="close": GO SUB 4500: REM unmount dirinfo.tap
+  512 IF oe THEN ON ERR \* 
   520 IF NOT dock THEN STOP : REM Already in HOME bank
   522 GO SUB 530
   523 INPUT "Turn off DOCK on NEW (y/N)? ";k$
@@ -396,7 +399,7 @@
  1106 INPUT "Remove "+t$+" (y/N)?";k$
  1108 IF k$<>"y" AND k$<>"Y" THEN GO TO 79
  1110 LET u$="tpi:rm "+t$
- 1112 PRINT #0;u$
+ 1112 PRINT #0; INK df;u$
  1114 GO SUB 9
  1116 GO SUB 710: INPUT ""
  1118 IF u>=0 THEN GO TO 1122
@@ -408,14 +411,14 @@
  1202 IF t$="" THEN GO TO 79
  1204 IF LEN t$>10 THEN BEEP 0.1,0: GO TO 1200
  1206 LET u$="tpi:md "+t$
- 1210 PRINT #0;u$
+ 1210 PRINT #0; INK df;u$
  1212 GO SUB 9
  1214 GO SUB 710: INPUT ""
  1216 IF u>=0 THEN GO TO 1220
  1218 INPUT "md failed. Press enter: ";k$
  1220 GO TO 2000
 # Main display and re-get dirinfo
- 2000 CLS : PRINT 
+ 2000 CLS : PRINT ''
  2002 GO SUB 50
  2004 GO SUB 60
  2008 GO SUB 20
@@ -423,7 +426,7 @@
 # Show key help
  3000 REM help
  3002 CLS 
- 3004 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 5; PAPER 0;" Help "
+ 3004 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 2; PAPER 0;" H"; INK 6;"e"; INK 4;"l"; INK 5;"p "
  3005 PRINT INK df;"Up/Down"; INK fg;" Move selection"
  3006 PRINT INK df;"Space  "; INK fg;" Move down"
  3007 PRINT INK df;"<- / ->"; INK fg;" Page up/down"
@@ -451,12 +454,12 @@
  4020 GO SUB 9: LET u$="tpi:ffw": GO SUB 11
  4030 GO SUB 9: LET u$="tpi:tapdir": GO SUB 14
 #Load Merge Code Append <= >= X
- 4050 PRINT #0; INVERSE 1;"L"; INVERSE 0;"oad "; INVERSE 1;"C"; INVERSE 0;"ode ";
+ 4050 PRINT #0; INK df; INVERSE 1;"L"; INVERSE 0;"oad "; INVERSE 1;"C"; INVERSE 0;"ode ";
 # MERGE could be available in the utility version
-# 4052 IF dock THEN PRINT #0; INVERSE 1;"M"; INVERSE 0;"erge ";
- 4054 PRINT #0; INVERSE 1;"A"; INVERSE 0;"ppend ";
- 4056 PRINT #0; INVERSE 1;"<="; INVERSE 0;" "; INVERSE 1;">=";
- 4058 PRINT #0;" "; INVERSE 1;"X"
+# 4052 IF dock THEN PRINT #0;INK df; INVERSE 1;"M"; INVERSE 0;"erge ";
+ 4054 PRINT #0; INK df; INVERSE 1;"A"; INVERSE 0;"ppend ";
+ 4056 PRINT #0; INK df; INVERSE 1;"<="; INVERSE 0;" "; INVERSE 1;">=";
+ 4058 PRINT #0; INK df;" "; INVERSE 1;"X"
  4060 LET k$=INKEY$: LET k=CODE k$: IF k$="" THEN GO TO 4060
  4061 INPUT ""
  4062 IF k=200 THEN PRINT AT 0,0;: GO TO 4000
@@ -466,63 +469,55 @@
  4070 IF k$="a" THEN GO TO 4150
 # 4070 IF k$="m" AND dock THEN GO TO 600
  4098 GO TO 2008
-# Rewind (tpi:rew) Reshows tapdir after
+ 4099 REM rew
  4100 GO SUB 9: LET u$="tpi:rew": GO SUB 11
  4130 GO TO 4030
  4150 LET t$="append"
  4154 GO TO 4800
 # Other common pattern helpers
-## SAVE tpi cmd, no reload
  4200 REM SAVE tpi cmd, no reload
  4210 CLS 
  4212 LET u$="tpi:"+t$
- 4214 PRINT #0;u$
+ 4214 PRINT #0; INK df;u$
  4220 GO SUB 9: GO SUB 11
  4230 INPUT ""
- 4232 PRINT #0;"Press a key..."
+ 4232 PRINT #0; INK df;"Press a key..."
  4234 PAUSE 0: INPUT ""
  4236 GO TO 2008
-## SAVE tpi cmd, reload
  4300 REM SAVE tpi cmd, reload
  4310 CLS 
- 4312 LET u$="tpi:"+t$
- 4314 PRINT #0;u$
- 4320 GO SUB 9: GO SUB 11
- 4322 INPUT ""
- 4324 PRINT #0;"Press a key..."
- 4326 PAUSE 0: INPUT ""
- 4330 GO TO 2000
+ 4320 LET u$="tpi:"+t$
+ 4330 PRINT #0; INK df;u$
+ 4340 GO SUB 9: GO SUB 11
+ 4350 INPUT "": PRINT #0; INK df;"Press a key..."
+ 4360 PAUSE 0: INPUT ""
+ 4370 GO TO 2000
 ## LOAD tpi cmd, reload
  4400 REM LOAD tpi cmd, reload
- 4410 CLS 
- 4412 LET u$="tpi:"+t$
- 4414 PRINT #0;u$
- 4420 GO SUB 9: GO SUB 14
- 4430 GO TO 4322
+ 4410 CLS : LET u$="tpi:"+t$
+ 4420 PRINT #0; INK df;u$
+ 4430 GO SUB 9: GO SUB 14
+ 4440 GO TO 4322
 ## SAVE tpi, no reload, no CLS or prompt or redraw
  4500 REM SAVE tpi, no reload, no CLS or prompt or redraw
  4510 LET u$="tpi:"+t$
- 4512 PRINT #0;u$
- 4520 GO SUB 9: GO SUB 11
- 4530 INPUT ""
- 4540 RETURN 
-## SAVE tpi, no reload, no echo, no prompt
+ 4520 PRINT #0; INK df;u$
+ 4530 GO SUB 9: GO SUB 11
+ 4540 INPUT ""
+ 4550 RETURN 
  4599 REM SAVE tpi, no reload, no echo, no prompt
- 4600 CLS 
- 4610 LET u$="tpi:"+t$
- 4612 GO SUB 9: GO SUB 11
- 4620 GO TO 4324
-## SAVE tpi, no reload, no prompt
+ 4600 CLS : LET u$="tpi:"+t$
+ 4610 GO SUB 9: GO SUB 11
+ 4620 GO TO 4350
  4699 REM SAVE tpi, no reload, no prompt
- 4700 CLS 
- 4701 LET u$="tpi:"+t$
- 4702 PRINT #0;u$
+ 4700 CLS : LET u$="tpi:"+t$
+ 4702 PRINT #0; INK df;u$
  4704 GO SUB 9: GO SUB 11
  4706 INPUT ""
  4708 GO TO 2008
  4799 REM Save tpi, no reload, no prompt, getinfo 
  4800 CLS : LET u$="tpi:"+t$
- 4810 PRINT #0;u$
+ 4810 PRINT #0; INK df;u$
  4820 GO SUB 9: GO SUB 11
  4830 INPUT ""
  4840 LET t$="getinfo"
