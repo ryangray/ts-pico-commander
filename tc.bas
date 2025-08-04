@@ -200,7 +200,7 @@
 # Set color of file to normal in case it was error color
   236 LET e(s)=0: LET b$(s,8)=CHR$ fg
   237 LET m$=t$
-  238 ON ERR \*: IF oe THEN ON ERR GO TO oe
+  238 ON ERR RESET : IF oe THEN ON ERR GO TO oe
   239 IF e$=".tap" OR e$=".TAP" THEN CLS : GO TO 250
   240 IF e$="" THEN GO TO 248: REM no ext, mount only
   241 IF e$=".dck" OR e$=".DCK" THEN GO TO 260
@@ -252,7 +252,7 @@
   500 REM Switch running from AROS to BASIC
   502 IF m=-1 THEN LET t$="close": GO SUB 4500: REM unmount dirinfo.tap
   510 INK 0: PAPER 7: BORDER 7: CLS 
-  512 IF oe THEN ON ERR \* 
+  512 IF oe THEN ON ERR RESET  
   520 IF NOT dock THEN STOP : REM Already in HOME bank
   522 GO SUB 530
   523 INPUT "Turn off DOCK on NEW (y/N)? ";k$
@@ -276,7 +276,7 @@
   559 RETURN 
 # Do a LOAD "" on mounted file (handling if in DOCK and if .dck file)
   600 IF m<1 THEN BEEP 0.1,0: GO TO 2008
-  601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR \*
+  601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR RESET 
   602 IF dock THEN GO TO 604
   603 LOAD "": STOP 
   604 IF e$=".dck" OR e$=".DCK" OR e$=".rom" OR e$=".ROM" OR e$=".bin" OR e$=".BIN" THEN GO TO 607
@@ -353,11 +353,11 @@
   830 IF err<>19 THEN GO TO 834: REM Other err timeout
 ## Pico not responding, reset ON ERR, show error and stop
   832 PRINT INVERSE 1;"TS-Pico not responding."
-  834 ON ERR \*
+  834 ON ERR RESET 
   836 PRINT INVERSE 1;"Error ";c$(err+1);" ";lin;":";stm
   839 STOP 
 ## Error from a BREAK 
-  850 ON ERR \*
+  850 ON ERR RESET 
   852 INPUT "BREAK: (S)top or (C)ontinue?";k$
   854 IF k$="s" OR k$="S" THEN STOP 
   856 ON ERR GO TO oe
