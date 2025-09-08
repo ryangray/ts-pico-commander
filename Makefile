@@ -14,8 +14,8 @@ tc.tap: tc.bas
 tc.dck: tc.tap
 	tap2cart tc.tap
 
-sd: tc.tap
-	cp tc.tap /media/ryan/LEXAR64/TAP
+sd: tc.tap tc.dck
+	cp tc.tap tc.dck /media/ryan/LEXAR64/TAP
 
 nofile_menu.tap: tc.bas
 	zmakebas -a 1 -n menu -o nofile_menu.tap tc.bas
