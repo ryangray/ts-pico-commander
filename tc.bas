@@ -1,11 +1,11 @@
     1 REM TS-Pico Commander
-    2 REM 3 August 2025
+    2 REM 8 September 2025
     3 REM By Ryan Gray
     4 REM 
 # Init, Get the current path, Load directory info, and Draw the file screen
     5 GO SUB 9000: GO SUB 50: GO SUB 60: GO SUB 20
 # Print key for help on first run
-    6 PRINT AT 21,9; INK 0; PAPER 7;"? for help       v0.98"
+    6 PRINT AT 21,9; INK 0; PAPER 7;"? for help       v1.00"
 # Jump to key loop
     7 GO TO 79
 # Get FRAMES clock sub
@@ -21,9 +21,6 @@
    14 GO SUB 8: LET c0=c: LET u=1: REM LOAD tpi, caller doesn't handle error
    15 LOAD u$: IF u>=0 THEN RETURN 
    16 PRINT INVERSE 1;"Failed: LOAD """;u$;"""": GO TO 834
-# LOAD dirinfo data
-   17 GO SUB 8: LET c0=c: LET u=1: REM Load dirinfo data
-   18 LOAD "" DATA a$(): RETURN 
 # Draw current file screen sub
    19 REM Show listing
    20 INK fg: PAPER bg: BORDER bd: CLS 
@@ -46,7 +43,7 @@
 # Get directory path sub
    49 REM Get path
    50 DIM p$(32)
-   52 GO SUB 9: LET u$="tpi:path": GO SUB 14
+   52 GO SUB 9: LET u$="tpi:path": GO SUB 11
    54 FOR i=0 TO 31
    56 LET p$(i+1)=SCREEN$ (4,i)
    57 NEXT i
@@ -55,7 +52,8 @@
    60 GO SUB 9: LET u$="tpi:dirinfo.tap": GO SUB 14
 ## Reset mounted file and top of listing
    61 LET m=-1: LET t=2: PRINT 
-   62 GO SUB 9: GO SUB 17: REM LOAD "" DATA a$()
+## LOAD "" DATA a$()
+   62 GO SUB 9: GO SUB 8: LET c0=c: LET u=1: LOAD "" DATA a$()
 ## Parse info
    63 PRINT '"Working";
    64 LET d=VAL a$(1): LET f=VAL a$(2): LET n=d+f+2: DIM z(n): DIM y(n): DIM l$(n): DIM b$(n,38): DIM e(n)
@@ -99,13 +97,13 @@
    92 IF k=199 THEN IF m>=1 THEN CLS : GO TO 4100: REM <= rew 1 file
    93 IF k$="<" THEN IF m>=1 THEN CLS : GO TO 4110: REM <= rew 1 block
    94 IF k$="." THEN LET t$="..": GO TO 310: REM CD ..
-   95 IF k$="/" THEN LET t$="verbose": GO TO 4800: REM sym+V
+   95 IF k$="/" THEN LET t$="cd /": GO TO 4400: REM sym+V
    96 IF k=7 THEN GO SUB 150: LET s=2: LET j$="": GO TO 160: REM sh+1 jump to first file
    97 IF k$=":" THEN GO TO 400: REM tpi cmd
    98 IF k$="+" THEN IF m>0 THEN GO TO 4030: REM sym+K tapdir
    99 IF k=172 THEN LET t$="getinfo": GO TO 4200: REM sym+I
   100 IF k$="=" THEN LET t$="getlog": GO TO 4200: REM sym+L
-  101 IF k$="%" THEN LET t$="close": LET m=0: GO SUB 4600: PRINT AT 0,0;: GO SUB 21: GO TO 79
+  101 IF k$="%" THEN LET t$="close": LET m=0: GO TO 4600: PRINT AT 0,0;: GO SUB 21: GO TO 79
   102 IF k$="^" THEN LET t$="gethelp": GO TO 4600: REM sym+H
   103 IF k$="?" THEN GO TO 3000: REM TC help
   104 IF k$="-" THEN GO TO 200: REM sym+J mount+LOAD ""
@@ -114,8 +112,10 @@
   107 IF k=226 THEN GO TO 460: REM sym+A Append
   108 IF k=96 THEN GO TO 500: REM sym+X
   109 IF k=195 AND NOT dock THEN GO TO 480: REM sym+S zx48
-  110 IF k=34 THEN LET t$="tape": GO TO 4500
-  111 IF K$=";" THEN LET t$="sdcard": GO TO 4500
+# We don't have sdcard/tape because once you go to tape, you have to exit
+  110 IF k=34 THEN LET t$="ts2040": GO TO 4500: REM sym+P
+  111 IF k$=";" THEN LET t$="picopt": GO TO 4500: REM sym+O
+  112 IF k$="!" THEN GO TO 560
 #  108 IF k=6 THEN REM sh+2
 #  109 IF k=4 THEN REM sh+3
 #  110 IF k=5 THEN REM sh+4
@@ -234,8 +234,6 @@
   400 REM tpi command
   410 INPUT "tpi:";t$
   420 IF t$="" THEN GO SUB 20: GO TO 79
-  430 IF t$="dir" OR t$="path" OR t$="tapdir" THEN GO TO 4400
-  432 IF LEN t$>=3 AND t$( TO 3)="cd " THEN LET m=0
   440 GO TO 4300
   450 INPUT FLASH 1;"Failed"; FLASH 0;": ";(t$)'"Press Enter:";k$
 # Set color of file name to error color
@@ -292,6 +290,12 @@
   544 PRINT "2 for flash, and n is the bank"
   546 PRINT "that TC was loaded into."
   559 RETURN 
+# Show long name
+  560 IF s<d+3 THEN BEEP 0.1,0: GO TO 79
+  562 GO SUB 9: LET u$="tpi:dir"
+  564 LET a=1: LET b=s-d-3
+  566 PRINT #0; INK df;u$
+  568 GO SUB 9: GO SUB 720: GO TO 4230
 # Do a LOAD "" on mounted file (handling if in DOCK and if .dck file)
   600 IF m<1 THEN BEEP 0.1,0: GO TO 2008
   601 INK 0: PAPER 7: BORDER 7: CLS : ON ERR RESET 
@@ -420,10 +424,10 @@
  1110 IF s<=d+2 THEN GO TO 1116
  1112 REM Use &nnn for files
  1114 LET t$="&"+a$(s, TO 3)
- 1116 LET u$="tpi:rm "+t$
+ 1116 LET u$="tpi:rm "+t$: LET a=255: LET b=0
  1118 PRINT #0; INK df;u$
  1120 GO SUB 9
- 1122 GO SUB 710: INPUT ""
+ 1122 GO SUB 720: INPUT ""
  1124 IF u>=0 THEN GO TO 1128
  1126 INPUT "rm failed. Press enter: ";k$
  1128 GO TO 2000
@@ -469,8 +473,8 @@
 # Y
 # U
 # I                 getinfo
-# O                 sdcard
-# P                 tape (and printing)
+# O                 picopt
+# P                 ts2040
 # A                 append
 # S                 Spectrum zx48
 # D                 rm/rmdir (Delete)
@@ -511,7 +515,7 @@
 # 16 sym+I   getinfo   sym+N md
 # 17 sym+H   gethelp   sym+D rm/rmdir
 # 18 sym+L   getlog    sym+S Spectrum
-# 19 sym+P   tape      sym+O sdcard
+# 19 sym+P   ts2040    sym+O picopt
 # 20 :       Enter a tpi command
 # 21 sym+X   Exit commander
 #
@@ -529,11 +533,11 @@
  3021 PRINT INK df;"<= / >="; INK fg;" rew/ffw file"
  3022 PRINT INK df;"<  / > "; INK fg;" rew/ffw block"
  3023 PRINT INK df;"sym+J  "; INK fg;" LOAD """"   "
- 3024 PRINT INK df;"sym+A  "; INK fg;" append    "; INK df;"sym+V"; INK fg;" verbose"
+ 3024 PRINT INK df;"sym+A  "; INK fg;" append    "; INK df;"!   "; INK fg;" show name"
  3025 PRINT INK df;"sym+I  "; INK fg;" getinfo   "; INK df;"sym+N"; INK fg;" md"
- 3026 PRINT INK df;"sym+H  "; INK fg;" gethelp   "; INK df;"sym+D"; INK fg;" rmdir"
+ 3026 PRINT INK df;"sym+H  "; INK fg;" gethelp   "; INK df;"sym+D"; INK fg;" rm"
  3027 PRINT INK df;"sym+L  "; INK fg;" getlog    "; INK df;"sym+S"; INK fg;" zx48"
- 3028 PRINT INK df;"sym+P  "; INK fg;" tape      "; INK df;"sym+O"; INK fg;" sdcard"
+ 3028 PRINT INK df;"sym+P  "; INK fg;" ts2040    "; INK df;"sym+O"; INK fg;" picopt"
  3029 PRINT INK df;":      "; INK fg;" Enter a tpi command"
  3030 PRINT INK df;"sym+X  "; INK fg;" Exit commander"
 # 3040 INPUT "Press enter:";t$
@@ -546,11 +550,11 @@
 # Fast-forward (tpi:ffw) Reshows tapdir after
  4000 REM ffw by file
  4002 GO SUB 9: LET u$="tpi:ffw"
- 4004 LET a=2: LET b=0: GO SUB 720
+ 4004 LET a=0: LET b=2: GO SUB 720
  4006 GO TO 4030
  4010 REM ffw by block
  4012 GO SUB 9: LET u$="tpi:ffw": GO SUB 11
- 4030 GO SUB 9: LET u$="tpi:tapdir": GO SUB 14
+ 4030 GO SUB 9: LET u$="tpi:tapdir": GO SUB 11
 # tapdir menu:
 #01234567890123456789012345678901
 #Load Code Append <= >= < > ENTER
@@ -576,7 +580,7 @@
  4098 GO TO 2008
  4099 REM rew by file
  4100 GO SUB 9: LET u$="tpi:rew"
- 4102 LET a=2: LET b=0: GO SUB 720
+ 4102 LET a=0: LET b=2: GO SUB 720
  4104 GO TO 4030
  4110 REM rew by block
  4112 GO SUB 9: LET u$="tpi:rew": GO SUB 11
@@ -608,12 +612,13 @@
  4350 INPUT "": PRINT #0; INK df;"Press a key..."
  4360 PAUSE 0: INPUT ""
  4370 GO TO 2000
-## LOAD tpi cmd, reload
- 4400 REM LOAD tpi cmd, reload
- 4410 CLS : LET u$="tpi:"+t$
- 4420 PRINT #0; INK df;u$
- 4430 GO SUB 9: GO SUB 14
- 4440 GO TO 4350
+ 4400 REM SAVE tpi cmd, reload, CLS, no prompt
+ 4410 CLS 
+ 4412 LET u$="tpi:"+t$
+ 4414 PRINT #0; INK df;u$
+ 4420 GO SUB 9: GO SUB 11
+ 4430 INPUT ""
+ 4436 GO TO 2008
 ## SAVE tpi, no reload, no CLS or prompt or redraw
  4500 REM SAVE tpi, no reload, no CLS or prompt or redraw
  4510 LET u$="tpi:"+t$
@@ -624,12 +629,6 @@
  4600 CLS : LET u$="tpi:"+t$
  4610 GO SUB 9: GO SUB 11
  4620 GO TO 2008
- 4699 REM SAVE tpi, no reload, no prompt
- 4700 CLS : LET u$="tpi:"+t$
- 4702 PRINT #0; INK df;u$
- 4704 GO SUB 9: GO SUB 11
- 4706 INPUT ""
- 4708 GO TO 2008
  4799 REM Save tpi, no reload, no prompt, getinfo 
  4800 CLS : LET u$="tpi:"+t$
  4810 PRINT #0; INK df;u$
@@ -651,17 +650,17 @@
  9010 INK bg: PAPER bg: BORDER bd
  9011 FLASH 0: BRIGHT 0: OVER 0
  9012 INVERSE 0: CLS 
- 9013 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 5; PAPER 0;" 0.98 "
+ 9013 PRINT INK 5; PAPER 0;" TIMEX "; INK 0; PAPER 7;" TS-Pico Commander "; INK 5; PAPER 0;" 1.00 "
  9014 LET c$="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
  9015 LET c0=0: LET j$="": DIM m$(22)
  9019 REM Set error handling
  9020 IF oe THEN ON ERR GO TO oe
- 9029 REM Turn off tpi:verbose
- 9030 LET u$="tpi:verbose"
- 9032 GO SUB 9: GO SUB 11
- 9040 IF SCREEN$ (2,0)="V" THEN GO SUB 9: GO SUB 11
+# Make sure we are in sdcard mode and verbose is off
+ 9030 LET u$="tpi:sdcard": GO SUB 9: GO SUB 11
+ 9040 LET u$="tpi:verbose": LET a=1: LET b=0
+ 9042 GO SUB 9: GO SUB 720
  9050 INK fg
-## Determine if we are running from the DOCK bank
+### Determine if we are running from the DOCK bank
  9060 LET nxt=PEEK 23637+256*PEEK 23638
  9062 LET nxtlin=256*PEEK nxt+PEEK (nxt+1)
  9064 LET dock=nxtlin<>9062
