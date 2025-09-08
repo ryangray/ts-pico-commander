@@ -294,7 +294,7 @@
   560 IF s<d+3 THEN BEEP 0.1,0: GO TO 79
   562 GO SUB 9: LET u$="tpi:dir"
   564 LET a=1: LET b=s-d-3
-  566 PRINT #0; INK df;u$
+  566 CLS : PRINT #0; INK df;u$
   568 GO SUB 9: GO SUB 720: GO TO 4230
 # Do a LOAD "" on mounted file (handling if in DOCK and if .dck file)
   600 IF m<1 THEN BEEP 0.1,0: GO TO 2008
