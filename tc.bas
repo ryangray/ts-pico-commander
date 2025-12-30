@@ -1,5 +1,5 @@
     1 REM TS-Pico Commander
-    2 REM 8 September 2025
+    2 REM 15 December 2025
     3 REM By Ryan Gray
     4 REM 
 # Init, Get the current path, Load directory info, and Draw the file screen
@@ -25,7 +25,7 @@
    19 REM Show listing
    20 INK fg: PAPER bg: BORDER bd: CLS 
    21 PRINT INK df; PAPER bd;p$
-   22 PRINT INK 5; PAPER 0;" &  "; INK 0; PAPER 7;" NAME             "; PAPER 2; INK 4;"\ :"; INK 5; PAPER 0;"\:  SIZE   "
+   22 PRINT INK 5; PAPER 0;" #  "; INK 0; PAPER 7;" NAME             "; PAPER 2; INK 4;"\ :"; INK 5; PAPER 0;"\:  SIZE   "
    23 IF rd THEN INK bd: PAPER ff: PLOT 0,166: DRAW 0,1: DRAW 1,0: PLOT 254,167: DRAW 1,0: DRAW 0,-1: INK fg: PAPER bg
    24 LET r=18: IF r+t>n THEN LET r=n-t
    25 FOR i=t TO r+t
@@ -45,7 +45,7 @@
    50 DIM p$(32)
    52 GO SUB 9: LET u$="tpi:path": GO SUB 11
    54 FOR i=0 TO 31
-   56 LET p$(i+1)=SCREEN$ (4,i)
+   56 LET p$(i+1)=SCREEN$ (3,i)
    57 NEXT i
    58 RETURN 
 # Load directory info
@@ -89,7 +89,7 @@
    84 IF k=8 AND s-19>=2 THEN GO SUB 150: LET s=s-19: GO TO 160: REM sh+5 pgup
    85 IF k=9 AND s+19<=n THEN GO SUB 150: LET s=s+19: GO TO 160: REM sh+8 pgdn
    86 IF k=9 AND t+19<=n THEN GO SUB 150: LET s=t+19: GO TO 160: REM sh+8 pgdn close to end
-   87 IF k$="#" OR k$="&" THEN LET j$="&": INPUT "": PRINT #0; INK df;j$: GO TO 80
+   87 IF k$="#" THEN LET j$="#": INPUT "": PRINT #0; INK df;j$: GO TO 80
    88 IF k$>="0" AND k$<="9" THEN IF j$<>"" THEN LET j$=j$+k$: INPUT "": PRINT #0; INK df;j$: LET k$="": LET i=VAL j$(2 TO ): IF f>i THEN GO SUB 150: LET s=d+3+i: GO TO 160: REM num jump
    89 IF k=12 AND j$<>"" THEN LET j$=j$( TO LEN j$-1): INPUT "": PRINT #0; INK df;j$: GO TO 80: REM sh+0
    90 IF k=200 THEN IF m>=1 THEN CLS : GO TO 4000: REM >= ffw 1 file
@@ -101,10 +101,10 @@
    96 IF k=7 THEN GO SUB 150: LET s=2: LET j$="": GO TO 160: REM sh+1 jump to first file
    97 IF k$=":" THEN GO TO 400: REM tpi cmd
    98 IF k$="+" THEN IF m>0 THEN GO TO 4030: REM sym+K tapdir
-   99 IF k=172 THEN LET t$="getinfo": GO TO 4200: REM sym+I
-  100 IF k$="=" THEN LET t$="getlog": GO TO 4200: REM sym+L
+   99 IF k=172 THEN LET t$="info": GO TO 4200: REM sym+I
+  100 IF k$="=" THEN LET t$="log": GO TO 4200: REM sym+L
   101 IF k$="%" THEN LET t$="close": LET m=0: GO TO 4600: PRINT AT 0,0;: GO SUB 21: GO TO 79
-  102 IF k$="^" THEN LET t$="gethelp": GO TO 4600: REM sym+H
+  102 IF k$="^" THEN LET t$="help": GO TO 4600: REM sym+H
   103 IF k$="?" THEN GO TO 3000: REM TC help
   104 IF k$="-" THEN GO TO 200: REM sym+J mount+LOAD ""
   105 IF k=205 THEN GO TO 1100: REM sym+D RM/RMDIR
@@ -198,7 +198,7 @@
 ## Mount the file
   230 PRINT #0; INK df;"Mounting: ";t$
   231 GO SUB 9
-  232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as ""&";a$(s, TO 3);""")": LET u$="tpi:&"+a$(s, TO 3): GO SUB 760: GO TO 235
+  232 IF e$="" OR LEN t$-LEN e$>10 THEN PRINT #0;" (as """;a$(s, TO 3);""")": LET u$="tpi:"+a$(s, TO 3): GO SUB 760: GO TO 235
   234 LET u$="tpi:"+t$: GO SUB 760
   235 IF u<0 THEN GO SUB 450: GO TO 2008
 # Set color of file to normal in case it was error color
@@ -251,14 +251,16 @@
 # Spectrum mode
   480 INPUT INK df;"Exit to Spectrum mode (y/N)?";k$
   482 IF k$<>"y" THEN GO TO 2008
-  484 LET t$="zx48": GO SUB 4500
-  486 INK 0: PAPER 7: BORDER 7: CLS 
+  484 INK 0: PAPER 7: BORDER 7: CLS 
+  486 LET u$="tpi:zx48": GO SUB 9: GO SUB 11
   488 IF oe THEN ON ERR RESET 
-  490 PRINT "TS-Pico is disabled in Spectrum"
-  491 PRINT "mode until you reset it or use:"
-  492 PRINT "OUT 10,100 and then OUT 244,0."
-  493 IF m>0 THEN PRINT '"Use LOAD """" to load from the    mounted file:"''m$
-  494 INPUT "Start the Spectrum ROM now with OUT 244,3 (y/N)?";k$
+#  490 PRINT "TS-Pico is disabled in Spectrum"
+#  491 PRINT "mode until you reset it or use:"
+#  492 PRINT "OUT 10,100 and then OUT 244,0."
+  493 IF m>0 THEN PRINT '"Use LOAD """" in Spectrum mode to load from the mounted file:"''m$
+#  493 IF m>0 THEN PRINT '"Use LOAD """" to load from the    mounted file:"''m$
+#            01234567890123456789012345678901 01234567890123456789012345678901
+  494 INPUT "Start the Spectrum ROM now with OUT 244,3 [you may need to also press TS-Reset] (y/N)?";k$
   496 IF k$="y" THEN OUT 244,3
   498 OUT 10,100: GO TO 2008
 # Switch running from AROS to BASIC and exit
@@ -267,17 +269,16 @@
   502 IF m=-1 THEN LET u$="tpi:close": GO SUB 710: REM unmount dirinfo.tap
   510 INK 0: PAPER 7: BORDER 7: CLS 
   512 IF oe THEN ON ERR RESET 
-  514 SAVE "tpi:nop": SAVE "tpi:getinfo"
-  516 IF PEEK 24027=0 THEN PRINT ''"Use SAVE""tpi:sdcard"" to enable "'"the TS-Pico later"
+#  514 SAVE "tpi:nop": SAVE "tpi:info"
+  516 IF ((PEEK 24027)/4-INT ((PEEK 24027)/4)*2<1 THEN PRINT ''"Use SAVE""tpi:sdcard"" to enable "'"the TS-Pico later"
   520 IF NOT dock THEN STOP : REM Already in HOME bank
   522 GO SUB 530
   523 INPUT "Turn off DOCK on NEW (y/N)? ";k$
   524 IF k$="y" OR k$="Y" THEN GO TO 529
-#                      1111111111222222222233
 #     PRINT "01234567890123456789012345678901"
   525 PRINT '"To turn off running the DOCK"
   526 PRINT "program after NEW, use:"
-  527 PRINT " SAVE ""tpi:memdock""CODE 2,0"
+  527 PRINT " SAVE ""tpi:dock""CODE 2,0"
   528 POKE 23750,0: STOP 
   529 SAVE "tpi:memdock"CODE 2,0: POKE 23750,0: STOP 
   530 PRINT "Exiting DOCK bank to HOME bank."
@@ -285,7 +286,7 @@
   534 PRINT " POKE 23750,128: RUN"
   536 PRINT "to preserve the BASIC program."
   538 PRINT '"If you switch DOCK banks, use"
-  540 PRINT " SAVE ""tpi:memdock""CODE m,n"
+  540 PRINT " SAVE ""tpi:dock""CODE m,n"
   542 PRINT "first, where m is 1 for SRAM or"
   544 PRINT "2 for flash, and n is the bank"
   546 PRINT "that TC was loaded into."
@@ -368,7 +369,8 @@
   816 IF u>0 THEN LET u=-1: RETURN : REM Immediate error
   818 LET u=0: REM Reset after 1st error
   820 PAUSE 20: REM Wait a bit before retry
-  822 GO TO lin: REM Retry command
+#  822 GO TO lin: REM Retry command
+  822 ON ERR CONTINUE : REM Retry command
   830 IF err<>19 THEN GO TO 834: REM Other err timeout
 ## Pico not responding, reset ON ERR, show error and stop
   832 PRINT INVERSE 1;"TS-Pico not responding."
@@ -401,18 +403,18 @@
   936 LET t$=t$+k$
   938 NEXT j
   939 RETURN 
-# Get mounted file extension from getinfo screen
-  950 CLS : GO SUB 9: LET i=11
-  952 LET u$="tpi:getinfo": GO SUB 11
-  954 IF SCREEN$ (i,0)<>">" THEN LET i=i+1: GO TO 954
-  956 LET i=i-1: LET j=31: LET e$=""
-  958 IF SCREEN$ (i,j)=" " THEN LET j=j-1: GO TO 958
-  960 LET e$=e$+SCREEN$ (i,j): IF e$(1)="." THEN RETURN 
-  962 IF j=0 THEN LET j=31: LET i=i-1
-  964 IF e$=": none" THEN LET e$="": RETURN 
-  966 GO TO 960
-# Delete (tpi:rm) Directory only right now. Should change ts-pico to rm=delete file and rmdir=delete directory
- 1099 REM remove
+# Get mounted file extension from info screen
+#  950 CLS : GO SUB 9: LET i=11
+#  952 LET u$="tpi:info": GO SUB 11
+#  954 IF SCREEN$ (i,0)<>">" THEN LET i=i+1: GO TO 954
+#  956 LET i=i-1: LET j=31: LET e$=""
+#  958 IF SCREEN$ (i,j)=" " THEN LET j=j-1: GO TO 958
+#  960 LET e$=e$+SCREEN$ (i,j): IF e$(1)="." THEN RETURN 
+#  962 IF j=0 THEN LET j=31: LET i=i-1
+#  964 IF e$=": none" THEN LET e$="": RETURN 
+#  966 GO TO 960
+#
+ 1099 REM remove (tpi:rm)
 # Need to make a sub of the mount part that uses a file index if needed so we 
 # can use it here and there. The cd command doesn't need it since it can't use 
 # index numbers because directories don't have them. As a consequence, 
@@ -422,8 +424,8 @@
  1106 INPUT INK df;"Remove "+t$+" (y/N)?";k$
  1108 IF k$<>"y" AND k$<>"Y" THEN GO TO 2008
  1110 IF s<=d+2 THEN GO TO 1116
- 1112 REM Use &nnn for files
- 1114 LET t$="&"+a$(s, TO 3)
+ 1112 REM Use nnn for files
+ 1114 LET t$=a$(s, TO 3)
  1116 LET u$="tpi:rm "+t$: LET a=255: LET b=0
  1118 PRINT #0; INK df;u$
  1120 GO SUB 9
@@ -444,7 +446,7 @@
  1218 INPUT "md failed. Press enter: ";k$
  1220 GO TO 2000
 # Main display and re-get dirinfo
- 2000 CLS : PRINT ''
+ 2000 CLS : PRINT '
  2002 GO SUB 50
  2004 GO SUB 60
  2008 GO SUB 20
@@ -455,42 +457,42 @@
 #
 # By key:
 #
-# Key   Shift       SymbolShift
-# 1     first name  (!)
-# 2                 (@) Load CODE addr,len (?)
-# 3                 (#) skip by index
-# 4                 ($)
-# 5     <- pg up    (CLOSE#) close
-# 6     v  down     (&) skip by index
-# 7     ^  up
-# 8     -> pg dn
-# 0     DELETE &
-# Q (<=)            rew (file)
-# W (<>)            Go to first file (remount) (?)
-# E (>=)            ffw (file)
-# R (<)             rew (block)
-# T (>)             ffw (block)
-# Y
-# U
-# I                 getinfo
-# O                 picopt
-# P                 ts2040
-# A                 append
-# S                 Spectrum zx48
-# D                 rm/rmdir (Delete)
-# F                 return to file list from help
-# G
-# H                 gethelp
-# J (LOAD)          mount and LOAD ""
-# K (LIST)          tapdir
-# L                 getlog
-# Z (:)             tpi command
-# X                 Exit
-# C (?)             TC help
-# V (/)             cd /
-# B (*)
-# N                 md (New dir)
-# M (.)             cd ..
+# Key  Shift       SymbolShift
+# 1    first name  (!)
+# 2                (@) Load CODE addr,len (?)
+# 3                (#) skip by index
+# 4                ($) 
+# 5    <- pg up    (%) close (CLOSE#)
+# 6    v  down
+# 7    ^  up   
+# 8    -> pg dn
+# 0    DEL idx# digit
+# Q                (<=)    rew (file)
+# W                (<>)    Go to first file (remount) (?)
+# E                (>=)    ffw (file)
+# R                (<)     rew (block)
+# T                (>)     ffw (block)
+# Y                (AND)   
+# U                (OR)    
+# I                (AT)    info
+# O                (;)     picopt
+# P                (")     ts2040
+# A                (STOP)  append
+# S                (NOT)   Spectrum zx48
+# D                (STEP)  rm/rmdir (Delete)
+# F                (TO)    return to file list from help
+# G                (THEN)  
+# H                (^)     help
+# J                (LOAD)  mount and LOAD ""
+# K                (LIST)  tapdir
+# L                (=)     log
+# Z                (:)     tpi command
+# X                (Pound) Exit
+# C                (?)     TC help
+# V                (/)     cd /
+# B                (*)     
+# N                (,)     md (New dir)
+# M                (.)     cd ..
 # ENTER mount/cd
 # SPACE down
 #
@@ -501,20 +503,20 @@
 # 02 Up/Down Select file, space=down
 # 03 <- / -> Page up/down
 # 04 0-9,a-z Skip to by # or letter
-# 05 &nnn    Skip to name by index #
+# 05 #nnn    Skip to name by index #
 # 06 DELETE  Backspace skip to index
 # 07 EDIT    Move to first name
 # 08 ENTER   Mount (tap shows tapdir)
 # 09           or change to dir
 # 10 . or /  cd .. or cd /
-# 11 sym+5   Close mounted file
+# 11 sym+5   Unmount   sym+4 New .tap
 # 12 <= / >= rew/ffw file
 # 13 <  / >  rew/ffw block
 # 14 sym+J   LOAD ""   sym+K tapdir
 # 15 sym+A   append    sym+V verbose
-# 16 sym+I   getinfo   sym+N md
-# 17 sym+H   gethelp   sym+D rm/rmdir
-# 18 sym+L   getlog    sym+S Spectrum
+# 16 sym+I   info      sym+N md
+# 17 sym+H   help      sym+D rm/rmdir
+# 18 sym+L   log       sym+S Spectrum
 # 19 sym+P   ts2040    sym+O picopt
 # 20 :       Enter a tpi command
 # 21 sym+X   Exit commander
@@ -523,20 +525,20 @@
  3011 PRINT INK df;"Up/Down"; INK fg;" Select file, space=down"
  3012 PRINT INK df;"<- / ->"; INK fg;" Page up/down"
  3013 PRINT INK df;"0-9,a-z"; INK fg;" Skip to by first letter"
- 3014 PRINT INK df;"&nnn   "; INK fg;" Skip to name by index #"
+ 3014 PRINT INK df;"nnn    "; INK fg;" Skip to name by index #"
  3015 PRINT INK df;"DELETE "; INK fg;" Backspace skip to index"
  3016 PRINT INK df;"EDIT   "; INK fg;" Move to first name"
  3017 PRINT INK df;"ENTER  "; INK fg;" Mount (tap shows tapdir)"
  3018 PRINT "          or change to dir"
  3019 PRINT INK df;". or / "; INK fg;" cd .. or cd /"
- 3020 PRINT INK df;"sym+5  "; INK fg;" Close mounted file"
+ 3020 PRINT INK df;"sym+5  "; INK fg;" Unmount   "; INK df;"sym+4"; INK fg;" New .tap"
  3021 PRINT INK df;"<= / >="; INK fg;" rew/ffw file"
  3022 PRINT INK df;"<  / > "; INK fg;" rew/ffw block"
  3023 PRINT INK df;"sym+J  "; INK fg;" LOAD """"   "
  3024 PRINT INK df;"sym+A  "; INK fg;" append    "; INK df;"!   "; INK fg;" show name"
- 3025 PRINT INK df;"sym+I  "; INK fg;" getinfo   "; INK df;"sym+N"; INK fg;" md"
- 3026 PRINT INK df;"sym+H  "; INK fg;" gethelp   "; INK df;"sym+D"; INK fg;" rm"
- 3027 PRINT INK df;"sym+L  "; INK fg;" getlog    "; INK df;"sym+S"; INK fg;" zx48"
+ 3025 PRINT INK df;"sym+I  "; INK fg;" info      "; INK df;"sym+N"; INK fg;" md"
+ 3026 PRINT INK df;"sym+H  "; INK fg;" help      "; INK df;"sym+D"; INK fg;" rm"
+ 3027 PRINT INK df;"sym+L  "; INK fg;" log       "; INK df;"sym+S"; INK fg;" zx48"
  3028 PRINT INK df;"sym+P  "; INK fg;" ts2040    "; INK df;"sym+O"; INK fg;" picopt"
  3029 PRINT INK df;":      "; INK fg;" Enter a tpi command"
  3030 PRINT INK df;"sym+X  "; INK fg;" Exit commander"
@@ -629,12 +631,12 @@
  4600 CLS : LET u$="tpi:"+t$
  4610 GO SUB 9: GO SUB 11
  4620 GO TO 2008
- 4799 REM Save tpi, no reload, no prompt, getinfo 
+ 4799 REM Save tpi, no reload, no prompt, info 
  4800 CLS : LET u$="tpi:"+t$
  4810 PRINT #0; INK df;u$
  4820 GO SUB 9: GO SUB 11
  4830 INPUT ""
- 4840 LET t$="getinfo"
+ 4840 LET t$="info"
  4850 GO TO 4200
 # Initialization
  9000 REM Init
