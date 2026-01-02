@@ -102,7 +102,7 @@
    97 IF k$=":" THEN GO TO 400: REM tpi cmd
    98 IF k$="+" THEN IF m>0 THEN GO TO 4030: REM sym+K tapdir
    99 IF k=172 THEN LET t$="info": GO TO 4200: REM sym+I
-  100 IF k$="=" THEN LET t$="log": GO TO 4200: REM sym+L
+  100 IF k$="=" THEN LET t$="log": GO TO 1300: REM sym+L
   101 IF k$="%" THEN LET t$="close": LET m=0: GO TO 4600: PRINT AT 0,0;: GO SUB 21: GO TO 79
   102 IF k$="^" THEN LET t$="help": GO TO 4600: REM sym+H
   103 IF k$="?" THEN GO TO 3000: REM TC help
@@ -270,7 +270,7 @@
   510 INK 0: PAPER 7: BORDER 7: CLS 
   512 IF oe THEN ON ERR RESET 
 #  514 SAVE "tpi:nop": SAVE "tpi:info"
-  516 IF ((PEEK 24027)/4-INT ((PEEK 24027)/4)*2<1 THEN PRINT ''"Use SAVE""tpi:sdcard"" to enable "'"the TS-Pico later"
+  516 IF ((PEEK 24027)/4-INT ((PEEK 24027)/4))*2<1 THEN PRINT ''"Use SAVE""tpi:sdcard"" to enable "'"the TS-Pico later"
   520 IF NOT dock THEN STOP : REM Already in HOME bank
   522 GO SUB 530
   523 INPUT "Turn off DOCK on NEW (y/N)? ";k$
@@ -366,7 +366,14 @@
   810 IF i>=300 THEN GO TO 830: REM Timeout
   812 IF err=13 OR err=21 THEN GO TO 850: REM Break
   814 IF err<>19 THEN GO TO 834: REM Not error J
+#
+# This is not a subroutine, so the RETURN is because the caller used GOSUB for
+# the tpi command service routine, so it makes the service routine RETURN to the
+# caller. We could make the service routine put RETURN on a separate line and
+# user GOTO lin+1 instead.
+#
   816 IF u>0 THEN LET u=-1: RETURN : REM Immediate error
+#
   818 LET u=0: REM Reset after 1st error
   820 PAUSE 20: REM Wait a bit before retry
 #  822 GO TO lin: REM Retry command
@@ -445,6 +452,16 @@
  1216 IF u>=0 THEN GO TO 1220
  1218 INPUT "md failed. Press enter: ";k$
  1220 GO TO 2000
+# View/clear log
+ 1300 CLS 
+ 1310 LET u$="tpi:log"
+ 1320 PRINT #0; INK df;u$
+ 1330 GO SUB 9: GO SUB 11
+ 1340 INPUT INK df;"Clear the log file (y/N)?";k$
+ 1350 IF k$<>"y" AND k$<>"Y" THEN GO TO 2008
+ 1360 LET u$="tpi:log clear": LET a=255: LET b=0
+ 1370 GO SUB 720
+ 1380 GO TO 4230
 # Main display and re-get dirinfo
  2000 CLS : PRINT '
  2002 GO SUB 50
